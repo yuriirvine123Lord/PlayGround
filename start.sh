@@ -11,7 +11,7 @@ time -p cd "$(dirname "$0")"
 /usr/bin/time -p test -x /usr/bin/python3
 /usr/bin/time -p mkdir -p dist
 # Rebuild when the generator or its data source changed (or output missing).
-if /usr/bin/time -p test dist/index.html -nt scripts/build_dist.py && /usr/bin/time -p test dist/index.html -nt neon-studio/effects.py; then
+if /usr/bin/time -p test dist/index.html -nt scripts/build_dist.py && /usr/bin/time -p test dist/index.html -nt netezack-videos-v2/effects.py; then
   /usr/bin/time -p echo "dist up to date, skipping build"
 else
   /usr/bin/time -p python3 scripts/build_dist.py

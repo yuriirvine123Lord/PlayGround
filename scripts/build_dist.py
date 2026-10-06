@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build the static preview site into PROJECT_DIR/dist (stdlib only).
 
-Reads neon-studio/effects.py as data so the 32 effects shown on the page
-always match the backend catalog. No third-party dependencies.
+Reads netezack-videos-v2/effects.py as data so the effects shown on the
+page always match the backend catalog. No third-party dependencies.
 """
 import importlib.util
 import json
@@ -16,7 +16,7 @@ DIST = ROOT / "dist"
 
 def load_effects():
     spec = importlib.util.spec_from_file_location(
-        "site_effects", ROOT / "neon-studio" / "effects.py"
+        "site_effects", ROOT / "netezack-videos-v2" / "effects.py"
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
