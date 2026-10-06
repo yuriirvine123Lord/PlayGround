@@ -6,10 +6,11 @@ Só colar a chave API: endpoints oficiais e modelos já vêm embarcados.
 ## Nome / pacote
 - Nome: **Netzack Videos V2**
 - Pacote: `com.netzack.videos` (mantido para atualizar por cima das anteriores)
-- Versão: 2.1.0 (versionCode 3)
+- Versão: 2.2.0 (versionCode 4, tema cyberpunk limpo)
 
 ## O que o app faz (v2.1.0: direto na IA, prompt único)
 Tudo em `DirectAI.kt` — sem `server/`, sem configurar URL nenhuma:
+0. **Tema cyberpunk limpo**: fundo abismo, neon ciano/magenta, cards, gradiente no botão Gerar vídeo.
 1. **Só a chave API** — detecção automática: `AIza…` → Google, `sk-ant-…` → Anthropic, `sk-…` → OpenAI.
 2. **Identificar IA e modelo**: consulta o catálogo ao vivo da sua conta e escolhe sozinho (Veo 3.1 p/ vídeo, melhor Gemini/GPT/Claude p/ chat).
 3. **Prompt único** para tudo: **Conversar** (roteiro) ou **Gerar vídeo** (Veo direto no Google, com polling + download + player).

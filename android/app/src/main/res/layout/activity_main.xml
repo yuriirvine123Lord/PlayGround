@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0B1020"
+    android:background="@drawable/bg_screen"
     android:fillViewport="true">
 
     <LinearLayout
@@ -14,8 +14,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Netzack Videos V2"
-            android:textColor="#E8ECF7"
+            android:text="NETZACK VIDEOS V2"
+            android:textColor="@color/neon_cyan"
             android:textSize="26sp"
             android:textStyle="bold" />
 
@@ -23,176 +23,218 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Só cole a chave API — sem servidor, sem configurar nada"
-            android:textColor="#AEB8D4"
+            android:textColor="@color/muted"
             android:textSize="13sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="1. Chave API (só isso!)"
-            android:textColor="#E8ECF7"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/etKey"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Cole aqui: AIza… / sk-… / sk-ant-…"
-            android:textColor="#E8ECF7"
-            android:textColorHint="#8794B7"
-            android:inputType="textPassword" />
-
-        <Button
-            android:id="@+id/btnDiscover"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Identificar IA e modelo" />
-
-        <TextView
-            android:id="@+id/tvDetected"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="IA detectada: —"
-            android:textColor="#AEE7BA"
-            android:textSize="13sp" />
-
-        <TextView
-            android:id="@+id/tvDiscover"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="O catálogo oficial aparece aqui. Sua chave nunca é exibida."
-            android:textColor="#AEB8D4"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="2. Prompt único"
-            android:textColor="#E8ECF7"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/etPrompt"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:gravity="top"
-            android:hint="Descreva a cena ou peça o roteiro… um prompt só vale para conversar e para gerar vídeo."
-            android:textColor="#E8ECF7"
-            android:textColorHint="#8794B7"
-            android:inputType="textMultiLine" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Efeito especial (só p/ vídeo)"
-            android:textColor="#AEB8D4"
-            android:textSize="12sp" />
-
-        <Spinner
-            android:id="@+id/spEffect"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="14dp">
 
-            <Spinner
-                android:id="@+id/spRatio"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-            <Spinner
-                android:id="@+id/spResolution"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-            <Spinner
-                android:id="@+id/spDuration"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <CheckBox
-                android:id="@+id/cbAudio"
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="Áudio"
-                android:textColor="#E8ECF7" />
+                android:text="◆ 1. CHAVE API"
+                android:textColor="@color/neon_pink"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etKey"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="Cole aqui: AIza… / sk-… / sk-ant-…"
+                android:textColor="@color/text"
+                android:textColorHint="@color/muted"
+                android:inputType="textPassword" />
 
             <Button
-                android:id="@+id/btnChat"
-                android:layout_width="0dp"
+                android:id="@+id/btnDiscover"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Conversar" />
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_btn_neon"
+                android:backgroundTint="@null"
+                android:text="Identificar IA e modelo"
+                android:textColor="#FFFFFF" />
 
-            <Button
-                android:id="@+id/btnVideo"
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/tvDetected"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Gerar vídeo" />
+                android:layout_marginTop="8dp"
+                android:text="IA detectada: —"
+                android:textColor="@color/ok"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvDiscover"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="O catálogo oficial aparece aqui. Sua chave nunca é exibida."
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btnCopy"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Copiar resposta" />
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="14dp">
 
-        <TextView
-            android:id="@+id/tvChat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="A resposta do chat aparece aqui."
-            android:textColor="#E8ECF7"
-            android:textSize="13sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="◆ 2. PROMPT ÚNICO"
+                android:textColor="@color/neon_pink"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tvVideo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="O status do vídeo aparece aqui."
-            android:textColor="#AEB8D4"
-            android:textSize="12sp" />
+            <EditText
+                android:id="@+id/etPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginTop="8dp"
+                android:gravity="top"
+                android:background="@drawable/bg_input"
+                android:hint="Descreva a cena ou peça o roteiro… um prompt só vale para conversar e para gerar vídeo."
+                android:textColor="@color/text"
+                android:textColorHint="@color/muted"
+                android:inputType="textMultiLine" />
 
-        <VideoView
-            android:id="@+id/videoView"
-            android:layout_width="match_parent"
-            android:layout_height="220dp"
-            android:layout_marginTop="8dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Efeito especial (só p/ vídeo)"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
 
-        <Button
-            android:id="@+id/btnPlay"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Reproduzir vídeo" />
+            <Spinner
+                android:id="@+id/spEffect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Spinner
+                    android:id="@+id/spRatio"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Spinner
+                    android:id="@+id/spResolution"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Spinner
+                    android:id="@+id/spDuration"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/cbAudio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/neon_cyan"
+                    android:checked="true"
+                    android:text="Áudio"
+                    android:textColor="@color/text" />
+
+                <Button
+                    android:id="@+id/btnChat"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_btn_ghost"
+                    android:backgroundTint="@null"
+                    android:text="Conversar"
+                    android:textColor="@color/neon_cyan" />
+
+                <Button
+                    android:id="@+id/btnVideo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_btn_neon"
+                    android:backgroundTint="@null"
+                    android:text="Gerar vídeo"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnCopy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_btn_ghost"
+                android:backgroundTint="@null"
+                android:text="Copiar resposta"
+                android:textColor="@color/neon_cyan" />
+
+            <TextView
+                android:id="@+id/tvChat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:text="A resposta do chat aparece aqui."
+                android:textColor="@color/text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvVideo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="O status do vídeo aparece aqui."
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+
+            <VideoView
+                android:id="@+id/videoView"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input" />
+
+            <Button
+                android:id="@+id/btnPlay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_btn_ghost"
+                android:backgroundTint="@null"
+                android:text="▶ Reproduzir vídeo"
+                android:textColor="@color/neon_cyan" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Dica: vídeo precisa de chave Google (AIza…) com Veo liberado. Chaves OpenAI/Anthropic servem para Conversar."
-            android:textColor="#8794B7"
+            android:textColor="@color/muted"
             android:textSize="11sp" />
     </LinearLayout>
 </ScrollView>

@@ -36,8 +36,8 @@ Baixe o aplicativo **Netzack Videos V2** pronto para instalar no Android:
 
 | Versão | Arquivo | Download |
 |--------|---------|----------|
+| v2.2.0 | `Netzack-Videos-V2-v2.2.0-debug.apk` (6,1 MB, tema cyberpunk) | [Download direto (release)](https://github.com/yuriirvine123Lord/PlayGround/releases/download/v2.2.0/Netzack-Videos-V2-v2.2.0-debug.apk) |
 | v2.1.0 | `Netzack-Videos-V2-v2.1.0-debug.apk` (6,1 MB, direto na IA, sem servidor) | [Download direto (release)](https://github.com/yuriirvine123Lord/PlayGround/releases/download/v2.1.0/Netzack-Videos-V2-v2.1.0-debug.apk) |
-| v2.0.0 | `Netzack-Videos-V2-v2.0.0-debug.apk` (6,1 MB) | [Download direto (release)](https://github.com/yuriirvine123Lord/PlayGround/releases/download/v2.0.0/Netzack-Videos-V2-v2.0.0-debug.apk) |
 | v1.0.0 | `Netzack-Videos-v1.0.0-debug.apk` (6,1 MB) | [Download direto (release)](https://github.com/yuriirvine123Lord/PlayGround/releases/download/v1.0.0/Netzack-Videos-v1.0.0-debug.apk) · [Ver todos os lançamentos](https://github.com/yuriirvine123Lord/PlayGround/releases) |
 
 **Como instalar:**

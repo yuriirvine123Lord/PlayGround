@@ -1,7 +1,15 @@
 <resources>
-    <color name="bg">#0B1020</color>
-    <color name="card">#141B31</color>
-    <color name="accent">#6D7CFF</color>
-    <color name="text">#E8ECF7</color>
-    <color name="muted">#AEB8D4</color>
+    <!-- Netzack Videos V2 — paleta cyberpunk limpa -->
+    <color name="abyss">#080812</color>
+    <color name="panel">#101024</color>
+    <color name="panel2">#16163A</color>
+    <color name="neon_cyan">#00F0FF</color>
+    <color name="neon_pink">#FF2EA6</color>
+    <color name="neon_purple">#7B2FFF</color>
+    <color name="grid_line">#23234D</color>
+    <color name="text">#F2F4FF</color>
+    <color name="muted">#9AA3C7</color>
+    <color name="ok">#39FF88</color>
+    <color name="warn">#FFB300</color>
+    <color name="danger">#FF5470</color>
 </resources>
