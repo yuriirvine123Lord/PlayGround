@@ -102,7 +102,7 @@ def parse_effects_from_prompt(prompt: str, explicit: list[str] | None = None) ->
             e = str(e).strip().lower()
             if e in EFFECTS and e not in cleaned:
                 cleaned.append(e)
-            if len(cleaned) >= 5:
+            if len(cleaned) >= 40:
                 break
         return cleaned or list(DEFAULT_EFFECTS)
     text = (prompt or "").lower()

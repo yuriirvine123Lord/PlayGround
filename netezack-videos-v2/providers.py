@@ -44,16 +44,53 @@ _HIDDEN_BASES: dict[str, dict[str, Any]] = {
     "huggingface": {"base": "https://router.huggingface.co/v1", "kind": "openai", "video": False, "free": True},
     "replicate": {"base": "https://api.replicate.com/v1", "kind": "openai", "video": False, "free": False},
     "stability": {"base": "https://api.stability.ai/v2beta", "kind": "openai", "video": False, "free": False},
+    "cerebras": {"base": "https://api.cerebras.ai/v1", "kind": "openai", "video": False, "free": True},
+    "deepinfra": {"base": "https://api.deepinfra.com/v1/openai", "kind": "openai", "video": False, "free": True},
+    "sambanova": {"base": "https://api.sambanova.ai/v1", "kind": "openai", "video": False, "free": True},
+    "nvidia": {"base": "https://integrate.api.nvidia.com/v1", "kind": "openai", "video": False, "free": True},
+    "moonshot": {"base": "https://api.moonshot.ai/v1", "kind": "openai", "video": False, "free": False},
+    "zhipu": {"base": "https://open.bigmodel.cn/api/paas/v4", "kind": "openai", "video": False, "free": False},
+    "minimax": {"base": "https://api.minimax.chat/v1", "kind": "openai", "video": False, "free": False},
+    "alibaba": {"base": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", "kind": "openai", "video": False, "free": False},
+    "nebius": {"base": "https://api.studio.nebius.com/v1", "kind": "openai", "video": False, "free": True},
     # Gratuitas sem chave (usadas como fallback de chat/roteiro, nunca expostas)
     "pollinations": {"base": "https://text.pollinations.ai/openai", "kind": "openai", "video": False, "free": True},
 }
 
+# Env vars aceitas por provedor (uso pessoal: pode exportar qualquer uma).
+_PROVIDER_ENV_VARS: dict[str, tuple[str, ...]] = {
+    "google": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+    "openai": ("OPENAI_API_KEY",),
+    "anthropic": ("ANTHROPIC_API_KEY",),
+    "deepseek": ("DEEPSEEK_API_KEY",),
+    "groq": ("GROQ_API_KEY",),
+    "together": ("TOGETHER_API_KEY",),
+    "fireworks": ("FIREWORKS_API_KEY",),
+    "mistral": ("MISTRAL_API_KEY",),
+    "openrouter": ("OPENROUTER_API_KEY",),
+    "xai": ("XAI_API_KEY",),
+    "perplexity": ("PERPLEXITY_API_KEY",),
+    "cohere": ("COHERE_API_KEY",),
+    "huggingface": ("HUGGINGFACE_API_KEY", "HF_TOKEN"),
+    "replicate": ("REPLICATE_API_TOKEN", "REPLICATE_API_KEY"),
+    "stability": ("STABILITY_API_KEY",),
+    "cerebras": ("CEREBRAS_API_KEY",),
+    "deepinfra": ("DEEPINFRA_API_TOKEN", "DEEPINFRA_API_KEY"),
+    "sambanova": ("SAMBANOVA_API_KEY",),
+    "nvidia": ("NVIDIA_API_KEY",),
+    "moonshot": ("MOONSHOT_API_KEY",),
+    "zhipu": ("ZHIPU_API_KEY",),
+    "minimax": ("MINIMAX_API_KEY",),
+    "alibaba": ("ALIBABA_API_KEY", "DASHSCOPE_API_KEY"),
+    "nebius": ("NEBIUS_API_KEY",),
+}
+
 # Dicas de formato de chave mostradas ao usuário (sem revelar URLs).
 KEY_FORMAT_HINTS = (
-    "Google/Gemini (começa com AIza…), "
-    "OpenAI (sk-…), Anthropic (sk-ant-…), "
-    "Groq (gsk_…), HuggingFace (hf_…), Replicate (r8_…), "
-    "xAI (xai-…), ou selecione o provedor manualmente."
+    "Google/Gemini (AIza…), OpenAI (sk-…), Anthropic (sk-ant-…), "
+    "Groq (gsk_…), HuggingFace (hf_…), Replicate (r8_…), xAI (xai-…), "
+    "OpenRouter (sk-or-…), Perplexity (pplx-…), Cerebras (csk-…), "
+    "ou AUTO detecta sozinho — pode colar qualquer chave."
 )
 
 VIDEO_MODEL_PRIORITY = (
@@ -159,6 +196,8 @@ def infer_provider(api_key: str, provider: str = "auto", base_url: str | None = 
         return "google"
     if key.startswith("sk-ant-"):
         return "anthropic"
+    if key.startswith("sk-or-"):
+        return "openrouter"
     if key.startswith("sk-"):
         return "openai"
     # Prefixos extras conhecidos (sem probing, só mapeamento seguro).
@@ -170,6 +209,16 @@ def infer_provider(api_key: str, provider: str = "auto", base_url: str | None = 
         return "replicate"
     if key.startswith("xai-"):
         return "xai"
+    if key.startswith("pplx-"):
+        return "perplexity"
+    if key.startswith("csk-"):
+        return "cerebras"
+    if key.startswith("fw-"):
+        return "fireworks"
+    if key.startswith("co-"):
+        return "cohere"
+    if key.startswith("nvapi-"):
+        return "nvidia"
 
     raise ProviderError(
         "Não foi possível identificar esta chave com segurança. Informe provider e base_url; "
@@ -225,8 +274,12 @@ async def smart_detect_provider(api_key: str, timeout_per_probe: float = 8.0) ->
     if google_models is not None:
         return ("google", GOOGLE_BASE_URL)
     # 2) Candidatos OpenAI-compatible em ordem de probabilidade.
+    # Todas as bases ficam SÓ aqui no servidor — o cliente nunca vê.
     candidates = ["openai", "groq", "deepseek", "together", "openrouter",
-                  "mistral", "fireworks", "xai", "huggingface", "cohere"]
+                  "mistral", "fireworks", "xai", "huggingface", "cohere",
+                  "cerebras", "deepinfra", "sambanova", "nvidia",
+                  "moonshot", "zhipu", "minimax", "alibaba", "nebius",
+                  "perplexity"]
     for name in candidates:
         base = _HIDDEN_BASES[name]["base"]
         models = await _probe_openai_models(base, key, timeout_per_probe)

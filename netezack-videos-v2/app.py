@@ -35,7 +35,7 @@ APP_DIR = Path(__file__).resolve().parent
 MEDIA_DIR = Path(os.getenv("MEDIA_DIR", str(APP_DIR / "media"))).resolve()
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 POLL_INTERVAL = float(os.getenv("VEO_POLL_INTERVAL_SECONDS", "10"))
-JOB_TIMEOUT = float(os.getenv("VEO_JOB_TIMEOUT_SECONDS", "900"))
+JOB_TIMEOUT = float(os.getenv("VEO_JOB_TIMEOUT_SECONDS", "3600"))
 EXPAND_TIMEOUT = float(os.getenv("EXPAND_TIMEOUT_SECONDS", "20"))
 
 # Porta primária (uvicorn CLI usa o mesmo ${PORT:-8080}).
@@ -123,7 +123,12 @@ app.add_middleware(
 )
 
 
-ProviderLiteral = Literal["auto", "google", "openai", "anthropic", "openai_compatible"]
+ProviderLiteral = Literal["auto", "google", "openai", "anthropic", "openai_compatible",
+                          "deepseek", "groq", "together", "fireworks", "mistral",
+                          "openrouter", "xai", "perplexity", "cohere",
+                          "huggingface", "replicate", "stability",
+                          "cerebras", "deepinfra", "sambanova", "nvidia",
+                          "moonshot", "zhipu", "minimax", "alibaba", "nebius"]
 
 
 class Credentials(BaseModel):
@@ -161,7 +166,7 @@ class VideoRequest(Credentials):
     sample_count: int | None = Field(default=1, ge=1, le=4)
     image_base64: str | None = Field(default=None, description="Opcional: imagem de referência em Base64.")
     image_mime_type: str | None = Field(default="image/png", pattern=r"^image/[a-zA-Z0-9.+-]+$")
-    effects: list[str] | None = Field(default=None, description="Até 5 efeitos; vazio = IA detecta pelo prompt.")
+    effects: list[str] | None = Field(default=None, description="Até 40 efeitos; vazio = IA detecta pelo prompt.")
     use_fallback: bool = Field(default=True, description="Se o Veo falhar, gera vídeo local com efeitos.")
 
     @field_validator("prompt")
@@ -193,12 +198,25 @@ jobs: dict[str, JobState] = {}
 
 
 def _env_key(provider: str) -> str | None:
-    names = {
-        "google": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
-        "openai": ("OPENAI_API_KEY",),
-        "anthropic": ("ANTHROPIC_API_KEY",),
-        "openai_compatible": ("OPENAI_COMPATIBLE_API_KEY",),
-    }
+    # Todas as envs ficam no servidor. Modo auto varre todas.
+    from providers import _PROVIDER_ENV_VARS
+    if provider == "auto":
+        order = ["google", "openai", "anthropic", "openai_compatible",
+                 "deepseek", "groq", "together", "openrouter", "mistral",
+                 "xai", "huggingface", "cerebras", "deepinfra"]
+        for name in order:
+            for env_name in _PROVIDER_ENV_VARS.get(name, ()):
+                value = os.getenv(env_name)
+                if value and value.strip():
+                    return value.strip()
+        for env_name in ("OPENAI_COMPATIBLE_API_KEY", "GEMINI_API_KEY",
+                         "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"):
+            value = os.getenv(env_name)
+            if value and value.strip():
+                return value.strip()
+        return None
+    names = dict(_PROVIDER_ENV_VARS)
+    names["openai_compatible"] = ("OPENAI_COMPATIBLE_API_KEY",)
     envs: tuple[str, ...] = names.get(provider, ("GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"))
     if provider not in names:
         envs = (f"{provider.upper()}_API_KEY", *envs)
@@ -574,13 +592,12 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 <span class="badge" id="provBadge">auto</span></header>
 
 <div class="card"><h2>// chave</h2>
-<label>API KEY — o servidor identifica o provedor sozinho, as base URLs ficam escondidas</label>
-<div class="row" style="margin-top:5px"><input id="key" type="password" placeholder="AIza… / sk-… / sk-ant-… / gsk_… / hf_… / r8_…" autocomplete="off" style="flex:2">
+<label>API KEY — cole qualquer chave, o servidor identifica sozinho (URLs ficam no servidor)</label>
+<div class="row" style="margin-top:5px"><input id="key" type="password" placeholder="AIza… / sk-… / sk-ant-… / gsk_… / hf_… / r8_… / xai-… / sk-or-… / pplx-… / csk-…" autocomplete="off" style="flex:2">
 <button id="discover">IDENTIFICAR</button><button id="clearKey" class="ghost">limpar</button></div>
 <pre id="discovery">status: aguardando chave</pre>
-<details><summary>avançado</summary>
-<label>provedor</label><select id="provider"><option value="auto">auto detectar</option><option value="google">google / gemini / veo</option><option value="openai">openai</option><option value="anthropic">anthropic</option><option value="openai_compatible">openai compatível</option></select>
-<label>base url customizada</label><input id="base" placeholder="deixe vazio na maioria das vezes"></details>
+<details><summary>provedor (opcional — auto já detecta tudo)</summary>
+<label>provedor</label><select id="provider"><option value="auto">auto detectar (todas IAs)</option><option value="google">google / gemini / veo</option><option value="openai">openai</option><option value="anthropic">anthropic</option><option value="deepseek">deepseek</option><option value="groq">groq</option><option value="together">together</option><option value="fireworks">fireworks</option><option value="mistral">mistral</option><option value="openrouter">openrouter</option><option value="xai">xAI</option><option value="perplexity">perplexity</option><option value="cohere">cohere</option><option value="huggingface">huggingface</option><option value="replicate">replicate</option><option value="stability">stability</option><option value="cerebras">cerebras</option><option value="deepinfra">deepinfra</option><option value="sambanova">sambanova</option><option value="nvidia">nvidia</option><option value="moonshot">moonshot/kimi</option><option value="zhipu">zhipu/glm</option><option value="minimax">minimax</option><option value="alibaba">alibaba/qwen</option><option value="nebius">nebius</option><option value="openai_compatible">openai compatível (auto)</option></select></details>
 </div>
 
 <div class="grid2">
@@ -597,7 +614,8 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 <select id="res" style="flex:1"><option value="720p">720p</option><option value="1080p">1080p</option></select>
 <select id="dur" style="flex:1"><option value="8">8s</option><option value="15">15s</option><option value="30">30s</option><option value="60">1 min</option><option value="120">2 min</option><option value="300">5 min</option><option value="600">10 min</option></select>
 </div>
-<label>efeitos (<span id="fxCount">0</span>/5 — vazio = IA escolhe)</label>
+<label>efeitos (<span id="fxCount">0</span>/40 — vazio = IA escolhe, pode marcar TODOS)</label>
+<div class="row" style="margin-top:6px"><button id="fxAll" class="ghost" type="button">MARCAR TODOS (40)</button><button id="fxNone" class="ghost" type="button">LIMPAR</button></div>
 <div class="chips" id="fx"></div>
 <div class="row"><button id="video" class="mag">GERAR VÍDEO</button></div>
 <div class="progress"><i id="bar"></i></div>
@@ -611,11 +629,13 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 </div><script>
 const $=id=>document.getElementById(id);
 let SEL=new Set();
-const creds=()=>({api_key:$('key').value||null,provider:$('provider').value,base_url:$('base').value||null});
+const creds=()=>({api_key:$('key').value||null,provider:$('provider').value});
 async function call(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||('Erro HTTP '+r.status));return j}
 function bubble(who,text){const d=document.createElement('div');d.className='msg '+(who==='user'?'user':'ai');d.textContent=text;$('chatBox').appendChild(d);$('chatBox').scrollTop=1e6}
-async function loadFx(){try{const j=await (await fetch('/v1/effects')).json();const box=$('fx');box.innerHTML='';(j.effects||[]).forEach(f=>{const s=document.createElement('span');s.className='chip';s.textContent=f.label;s.title=f.id+' — '+f.desc;s.onclick=()=>{SEL.has(f.id)?SEL.delete(f.id):(SEL.size<5&&SEL.add(f.id));s.classList.toggle('on');$('fxCount').textContent=SEL.size};box.appendChild(s)})}catch(e){$('fx').textContent='erro ao carregar efeitos'}}
+async function loadFx(){try{const j=await (await fetch('/v1/effects')).json();const box=$('fx');box.innerHTML='';(j.effects||[]).forEach(f=>{const s=document.createElement('span');s.className='chip';s.textContent=f.label;s.title=f.id+' — '+f.desc;s.onclick=()=>{SEL.has(f.id)?SEL.delete(f.id):(SEL.size<40&&SEL.add(f.id));s.classList.toggle('on');$('fxCount').textContent=SEL.size};box.appendChild(s)})}catch(e){$('fx').textContent='erro ao carregar efeitos'}}
 loadFx();
+$('fxAll').onclick=async()=>{try{const j=await (await fetch('/v1/effects')).json();SEL=new Set((j.effects||[]).map(f=>f.id));document.querySelectorAll('#fx .chip').forEach(c=>c.classList.add('on'));$('fxCount').textContent=SEL.size}catch(e){}};
+$('fxNone').onclick=()=>{SEL.clear();document.querySelectorAll('#fx .chip').forEach(c=>c.classList.remove('on'));$('fxCount').textContent='0'};
 $('clearKey').onclick=()=>{$('key').value='';$('provBadge').textContent='auto';$('provBadge').classList.remove('on')};
 $('discover').onclick=async()=>{const b=$('discover');b.disabled=true;$('discovery').textContent='identificando…';try{const j=await call('/v1/discover',creds());$('provBadge').textContent=j.provider+' · '+j.key_hint;$('provBadge').classList.add('on');$('discovery').textContent='provedor: '+j.provider+' ('+j.key_hint+')\nmodelo: '+j.selected_model+'\ncapacidades: '+JSON.stringify(j.capabilities)+'\nmodelos: '+(j.models||[]).slice(0,25).join(', ')}catch(e){$('discovery').textContent='erro: '+e.message}finally{b.disabled=false}};
 $('chat').onclick=async()=>{const t=$('chatPrompt').value.trim();if(!t)return;bubble('user',t);const b=$('chat');b.disabled=true;try{const j=await call('/v1/chat',{...creds(),messages:[{role:'user',content:t}]});$('chatOut').textContent=j.text;$('chatOut').style.display='block';bubble('ai',j.text.slice(0,900))}catch(e){bubble('ai','erro: '+e.message)}finally{b.disabled=false}};
