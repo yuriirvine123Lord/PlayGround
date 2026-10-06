@@ -22,7 +22,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Só cole a chave API — sem servidor, sem configurar nada"
+            android:text="Só cole a chave — qualquer IA do mercado, o app identifica sozinho"
             android:textColor="@color/muted"
             android:textSize="13sp" />
 
@@ -138,13 +138,20 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1" />
-
-                <Spinner
-                    android:id="@+id/spDuration"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
             </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Duração (até 10 min — gerado em pedaços e unido no app)"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
+
+            <Spinner
+                android:id="@+id/spDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
             <LinearLayout
                 android:layout_width="match_parent"

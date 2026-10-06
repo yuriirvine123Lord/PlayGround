@@ -17,8 +17,8 @@ import java.io.File
 import kotlin.concurrent.thread
 
 /** Netzack Videos V2: um chat só, um prompt só, SÓ a chave API.
- *  Sem servidor, sem base URL — endpoints e modelos já vêm embarcados e o app
- *  identifica sozinho o provedor (Google/OpenAI/Anthropic) e o modelo. */
+ *  Cole qualquer chave de qualquer provedor do mercado — o app identifica
+ *  sozinho (URLs embarcadas, nunca exibidas) e gera vídeo até 10 minutos. */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var etKey: EditText
@@ -35,6 +35,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var videoView: VideoView
 
     private var lastVideoFile: File? = null
+    private var playQueue: List<File> = emptyList()
+    private var playIndex = 0
+
+    private var detectedEp: DirectAI.Endpoint? = null
+
+    private val durationLabels = listOf("4 s", "6 s", "8 s", "15 s", "30 s", "1 min", "2 min", "5 min", "10 min")
+    private val durationValues = listOf(4, 6, 8, 15, 30, 60, 120, 300, 600)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,8 +63,16 @@ class MainActivity : AppCompatActivity() {
         spEffect.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, Effects.ALL.map { it.name })
         spRatio.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("16:9", "9:16"))
         spResolution.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("720p", "1080p", "4k"))
-        spDuration.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("4", "6", "8"))
-        spDuration.setSelection(2)
+        spDuration.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, durationLabels)
+        spDuration.setSelection(2) // 8 s por padrão
+
+        videoView.setOnCompletionListener {
+            playIndex++
+            if (playIndex < playQueue.size) {
+                videoView.setVideoPath(playQueue[playIndex].absolutePath)
+                videoView.start()
+            }
+        }
 
         findViewById<Button>(R.id.btnDiscover).setOnClickListener { doDiscover() }
         findViewById<Button>(R.id.btnChat).setOnClickListener { doChat() }
@@ -72,31 +87,54 @@ class MainActivity : AppCompatActivity() {
 
     private fun keyOrAsk(): String? {
         val k = etKey.text.toString().trim()
-        if (k.isBlank()) toast("Cole sua chave API primeiro — só ela basta")
+        if (k.isBlank()) toast("Cole sua chave API primeiro — qualquer uma, o app identifica sozinho")
         return k.ifBlank { null }
+    }
+
+    /** Identifica qualquer chave testando os endpoints embarcados (ocultos). */
+    private fun identifyAsync(onOk: (DirectAI.Endpoint) -> Unit, onFail: (String) -> Unit) {
+        val key = keyOrAsk() ?: return
+        detectedEp?.let { onOk(it); return }
+        tvDiscover.text = "Identificando a IA…"
+        thread {
+            try {
+                val ep = DirectAI.identify(key) { i, n ->
+                    runOnUiThread { tvDiscover.text = "Identificando a IA… ($i/$n provedores testados)" }
+                }
+                detectedEp = ep
+                runOnUiThread { tvDiscover.text = "Pronto." }
+                onOk(ep)
+            } catch (e: Exception) {
+                runOnUiThread { onFail(e.message ?: "Erro desconhecido") }
+            }
+        }
     }
 
     private fun doDiscover() {
         val key = keyOrAsk() ?: return
-        tvDiscover.text = "Identificando IA e modelo…"
-        thread {
-            try {
-                val provider = DirectAI.detect(key)
-                val models = DirectAI.listModels(provider, key)
-                val chatModel = DirectAI.pickChatModel(provider, models)
-                val videoModel = try {
-                    DirectAI.pickVideoModel(models)
+        tvDetected.text = "IA detectada: —"
+        identifyAsync(onOk = { ep ->
+            thread {
+                try {
+                    val models = DirectAI.listModels(ep, key)
+                    val chatModel = DirectAI.pickChatModel(ep.id, models)
+                    val videoModel = try {
+                        DirectAI.pickVideoModel(models)
+                    } catch (_: Exception) {
+                        null
+                    }
+                    runOnUiThread {
+                        tvDetected.text = "IA: ${ep.name} • chat: $chatModel • vídeo: ${videoModel ?: "chat-only"} (chave ${DirectAI.redact(key)})"
+                        tvDiscover.text = "Modelos da sua conta: ${models.take(25).joinToString(", ")}"
+                    }
                 } catch (e: Exception) {
-                    null
+                    runOnUiThread { tvDiscover.text = "Erro: ${e.message}" }
                 }
-                runOnUiThread {
-                    tvDetected.text = "IA: $provider • chat: $chatModel • vídeo: ${videoModel ?: "sem Veo liberado"} (chave ${DirectAI.redact(key)})"
-                    tvDiscover.text = "Modelos da sua conta: ${models.take(25).joinToString(", ")}"
-                }
-            } catch (e: Exception) {
-                runOnUiThread { tvDiscover.text = "Erro: ${e.message}" }
             }
-        }
+        }, onFail = { msg ->
+            tvDiscover.text = "Erro: $msg"
+            tvDetected.text = "IA detectada: —"
+        })
     }
 
     private fun doChat() {
@@ -104,14 +142,18 @@ class MainActivity : AppCompatActivity() {
         val msg = etPrompt.text.toString().trim()
         if (msg.isBlank()) { toast("Digite o prompt"); return }
         tvChat.text = "Gerando resposta…"
-        thread {
-            try {
-                val res = DirectAI.chat(DirectAI.detect(key), key, msg)
-                runOnUiThread { tvChat.text = "[${res.provider}/${res.model}]\n\n${res.text}" }
-            } catch (e: Exception) {
-                runOnUiThread { tvChat.text = "Erro: ${e.message}" }
+        identifyAsync(onOk = { ep ->
+            thread {
+                try {
+                    val res = DirectAI.chat(ep, key, msg)
+                    runOnUiThread { tvChat.text = "[${res.provider}/${res.model}]\n\n${res.text}" }
+                } catch (e: Exception) {
+                    runOnUiThread { tvChat.text = "Erro: ${e.message}" }
+                }
             }
-        }
+        }, onFail = { msg ->
+            tvChat.text = "Erro: $msg"
+        })
     }
 
     private fun copyChat() {
@@ -125,47 +167,147 @@ class MainActivity : AppCompatActivity() {
         val basePrompt = etPrompt.text.toString().trim()
         if (basePrompt.isBlank()) { toast("Digite o prompt"); return }
         val effect = Effects.ALL[spEffect.selectedItemPosition]
-        val fullPrompt = (basePrompt + effect.promptSuffix).trim()
         val ratio = if (spRatio.selectedItemPosition == 0) "16:9" else "9:16"
         val resolution = listOf("720p", "1080p", "4k")[spResolution.selectedItemPosition]
-        val duration = listOf(4, 6, 8)[spDuration.selectedItemPosition]
-        tvVideo.text = "Iniciando… (efeito: ${effect.name})"
-        thread {
-            try {
-                val provider = DirectAI.detect(key)
-                if (provider != "google") {
-                    runOnUiThread { tvVideo.text = "Vídeo precisa de chave Google (AIza…) com Veo. Sua chave é de: $provider (serve para Conversar)." }
-                    return@thread
+        val total = durationValues[spDuration.selectedItemPosition]
+        val audio = cbAudio.isChecked
+
+        identifyAsync(onOk = { ep ->
+            thread {
+                try {
+                    runGeneration(ep, key, basePrompt, effect, ratio, resolution, total, audio)
+                } catch (e: Exception) {
+                    runOnUiThread { tvVideo.text = "Não gerou. Motivo: ${e.message}" }
                 }
-                val (model, op) = DirectAI.startVideo(key, fullPrompt, ratio, resolution, duration, cbAudio.isChecked, effect.negativePrompt)
-                runOnUiThread { tvVideo.text = "Modelo $model gerando… (o Veo leva minutos, aguarde)" }
-                var tries = 0
-                while (tries < 90) {
-                    Thread.sleep(10000)
-                    tries++
-                    val poll = DirectAI.pollVideo(key, op)
-                    if (poll.done && poll.ref != null) {
-                        val dest = File(cacheDir, "netzack-${System.currentTimeMillis()}.mp4")
-                        DirectAI.downloadVideo(key, poll.ref, dest)
-                        lastVideoFile = dest
-                        runOnUiThread {
-                            tvVideo.text = "Pronto! Toque em Reproduzir."
-                            videoView.setVideoPath(dest.absolutePath)
-                            videoView.start()
-                        }
-                        return@thread
-                    }
-                    val t = tries
-                    runOnUiThread { tvVideo.text = "Modelo $model gerando… (${t * 10}s, aguarde)" }
+            }
+        }, onFail = { msg ->
+            tvVideo.text = "Não gerou. Motivo: $msg"
+        })
+    }
+
+    private fun runGeneration(
+        ep: DirectAI.Endpoint,
+        key: String,
+        basePrompt: String,
+        effect: EffectPreset,
+        ratio: String,
+        resolution: String,
+        total: Int,
+        audio: Boolean
+    ) {
+        val chunks: List<Int>
+        val mode: String
+        when {
+            ep.id == "google" -> {
+                chunks = DirectAI.splitDuration(total, DirectAI.VEO_CHUNKS)
+                mode = "veo"
+            }
+            ep.id == "openai" -> {
+                chunks = DirectAI.splitDuration(total, DirectAI.SORA_CHUNKS)
+                mode = "sora"
+            }
+            else -> {
+                runOnUiThread {
+                    tvVideo.text = "Vídeo disponível com chave Google (AIza…, Veo) ou OpenAI (Sora). " +
+                        "Sua IA (${ep.name}) está pronta para Conversar."
                 }
-                runOnUiThread { tvVideo.text = "Demorou demais — tente de novo com um prompt mais curto." }
-            } catch (e: Exception) {
-                runOnUiThread { tvVideo.text = "Não gerou. Motivo: ${e.message}" }
+                return
+            }
+        }
+
+        val files = mutableListOf<File>()
+        for ((i, secs) in chunks.withIndex()) {
+            val clipPrompt = if (i == 0) {
+                (basePrompt + effect.promptSuffix).trim()
+            } else {
+                (basePrompt + effect.promptSuffix + ", continuous seamless sequel of the same scene, same style and characters, next moment").trim()
+            }
+            runOnUiThread {
+                tvVideo.text = "Gerando pedaço ${i + 1}/${chunks.size} (${secs}s)… " +
+                    "até 10 min são vários pedaços; aguarde."
+            }
+            val dest = File(cacheDir, "netzack-clip-${i}-${System.currentTimeMillis()}.mp4")
+            when (mode) {
+                "veo" -> genVeoClip(key, clipPrompt, ratio, resolution, secs, audio, effect, i, chunks.size, dest)
+                else -> genSoraClip(key, clipPrompt, secs, resolution, ratio, i, chunks.size, dest)
+            }
+            files.add(dest)
+        }
+
+        val stitched = File(cacheDir, "netzack-full-${System.currentTimeMillis()}.mp4")
+        val ok = VideoStitcher.concat(files, stitched)
+        playQueue = files
+        playIndex = 0
+        if (ok) {
+            lastVideoFile = stitched
+            playQueue = listOf(stitched)
+            runOnUiThread {
+                tvVideo.text = "Pronto! ${chunks.size} pedaço(s) unidos em ${total}s (aprox.). Toque em Reproduzir."
+                videoView.setVideoPath(stitched.absolutePath)
+                videoView.start()
+            }
+        } else {
+            lastVideoFile = files.firstOrNull()
+            runOnUiThread {
+                tvVideo.text = "Pronto! ${files.size} pedaço(s) de ${total}s. Toque em Reproduzir (toca em sequência)."
+                if (files.isNotEmpty()) {
+                    playIndex = 0
+                    videoView.setVideoPath(files[0].absolutePath)
+                    videoView.start()
+                }
             }
         }
     }
 
+    private fun genVeoClip(
+        key: String, prompt: String, ratio: String, resolution: String,
+        secs: Int, audio: Boolean, effect: EffectPreset, idx: Int, totalClips: Int, dest: File
+    ) {
+        val (model, op) = DirectAI.startVeo(key, prompt, ratio, resolution, secs, audio, effect.negativePrompt)
+        var tries = 0
+        while (tries < 120) {
+            Thread.sleep(8000)
+            tries++
+            val poll = DirectAI.pollVeo(key, op)
+            if (poll.done && poll.ref != null) {
+                DirectAI.downloadVeo(key, poll.ref, dest)
+                return
+            }
+            val t = tries * 8
+            runOnUiThread { tvVideo.text = "Pedaço ${idx + 1}/$totalClips gerando… ($model, ${t}s aguardando)" }
+        }
+        throw RuntimeException("O Veo demorou demais no pedaço ${idx + 1}. Tente um tempo menor.")
+    }
+
+    private fun genSoraClip(
+        key: String, prompt: String, secs: Int, resolution: String, ratio: String,
+        idx: Int, totalClips: Int, dest: File
+    ) {
+        val size = DirectAI.soraSize(ratio, resolution)
+        val id = DirectAI.startSora(key, prompt, secs, size)
+        var tries = 0
+        while (tries < 150) {
+            Thread.sleep(5000)
+            tries++
+            val (done, err) = DirectAI.pollSora(key, id)
+            if (err != null) throw RuntimeException(err)
+            if (done) {
+                DirectAI.downloadSora(key, id, dest)
+                return
+            }
+            val t = tries * 5
+            runOnUiThread { tvVideo.text = "Pedaço ${idx + 1}/$totalClips gerando… (Sora, ${t}s aguardando)" }
+        }
+        throw RuntimeException("O Sora demorou demais no pedaço ${idx + 1}.")
+    }
+
     private fun playLast() {
+        if (playQueue.isNotEmpty() && playQueue.all { it.exists() }) {
+            playIndex = 0
+            videoView.setVideoPath(playQueue[0].absolutePath)
+            videoView.start()
+            return
+        }
         val f = lastVideoFile
         if (f == null || !f.exists()) { toast("Gere um vídeo primeiro"); return }
         videoView.setVideoPath(f.absolutePath)
