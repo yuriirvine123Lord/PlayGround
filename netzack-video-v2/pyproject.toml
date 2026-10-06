@@ -1,0 +1,10 @@
+[project]
+name = "veo-fastapi-generator"
+version = "1.0.0"
+description = "FastAPI leve para descoberta de modelos, chat e geração de vídeo Veo"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra"
