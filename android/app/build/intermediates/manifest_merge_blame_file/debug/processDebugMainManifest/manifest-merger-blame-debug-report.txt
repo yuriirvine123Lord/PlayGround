@@ -1,0 +1,253 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.coldshot.game"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="34" />
+10
+11    <!-- Internet apenas como fallback (o jogo roda 100% offline dos assets) -->
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:5:5-67
+12-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:5:22-64
+13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+13-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:6:5-79
+13-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:6:22-76
+14
+15    <uses-feature
+15-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:7:5-89
+16        android:name="android.hardware.touchscreen"
+16-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:7:19-62
+17        android:required="true" />
+17-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:7:63-86
+18    <uses-feature
+18-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:8:5-100
+19        android:name="android.hardware.touchscreen.multitouch"
+19-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:8:19-73
+20        android:required="true" />
+20-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:8:74-97
+21    <uses-feature
+21-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:9:5-78
+22        android:glEsVersion="0x00030000"
+22-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:9:19-51
+23        android:required="true" />
+23-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:9:52-75
+24
+25    <uses-permission android:name="com.android.vending.BILLING" />
+25-->[com.android.billingclient:billing-ktx:8.0.0] /home/runner/.gradle/caches/8.13/transforms/532bee070360e4cb86eb88c2e549bca9/transformed/billing-ktx-8.0.0/AndroidManifest.xml:9:5-67
+25-->[com.android.billingclient:billing-ktx:8.0.0] /home/runner/.gradle/caches/8.13/transforms/532bee070360e4cb86eb88c2e549bca9/transformed/billing-ktx-8.0.0/AndroidManifest.xml:9:22-64
+26
+27    <queries>
+27-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:12:5-19:15
+28        <intent>
+28-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:13:9-15:18
+29            <action android:name="com.android.vending.billing.InAppBillingService.BIND" />
+29-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:14:13-91
+29-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:14:21-88
+30        </intent>
+31        <intent>
+31-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:16:9-18:18
+32            <action android:name="com.google.android.apps.play.billingtestcompanion.BillingOverrideService.BIND" />
+32-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:17:13-116
+32-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:17:21-113
+33        </intent>
+34    </queries>
+35
+36    <permission
+36-->[androidx.core:core:1.13.0] /home/runner/.gradle/caches/8.13/transforms/070e832e402ddbc17f574c1e128c510e/transformed/core-1.13.0/AndroidManifest.xml:22:5-24:47
+37        android:name="com.coldshot.game.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+37-->[androidx.core:core:1.13.0] /home/runner/.gradle/caches/8.13/transforms/070e832e402ddbc17f574c1e128c510e/transformed/core-1.13.0/AndroidManifest.xml:23:9-81
+38        android:protectionLevel="signature" />
+38-->[androidx.core:core:1.13.0] /home/runner/.gradle/caches/8.13/transforms/070e832e402ddbc17f574c1e128c510e/transformed/core-1.13.0/AndroidManifest.xml:24:9-44
+39
+40    <uses-permission android:name="com.coldshot.game.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+40-->[androidx.core:core:1.13.0] /home/runner/.gradle/caches/8.13/transforms/070e832e402ddbc17f574c1e128c510e/transformed/core-1.13.0/AndroidManifest.xml:26:5-97
+40-->[androidx.core:core:1.13.0] /home/runner/.gradle/caches/8.13/transforms/070e832e402ddbc17f574c1e128c510e/transformed/core-1.13.0/AndroidManifest.xml:26:22-94
+41
+42    <application
+42-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:11:5-30:19
+43        android:allowBackup="true"
+43-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:17:9-35
+44        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+44-->[androidx.core:core:1.13.0] /home/runner/.gradle/caches/8.13/transforms/070e832e402ddbc17f574c1e128c510e/transformed/core-1.13.0/AndroidManifest.xml:28:18-86
+45        android:debuggable="true"
+46        android:extractNativeLibs="false"
+47        android:hardwareAccelerated="true"
+47-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:15:9-43
+48        android:icon="@drawable/ic_launcher"
+48-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:13:9-45
+49        android:label="Cold Shot"
+49-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:12:9-34
+50        android:theme="@style/Theme.ColdShot"
+50-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:14:9-46
+51        android:usesCleartextTraffic="false" >
+51-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:16:9-45
+52        <activity
+52-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:18:9-29:20
+53            android:name="com.coldshot.game.MainActivity"
+53-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:19:13-41
+54            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize|density"
+54-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:23:13-114
+55            android:exported="true"
+55-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:20:13-36
+56            android:immersive="true"
+56-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:24:13-37
+57            android:launchMode="singleTask"
+57-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:21:13-44
+58            android:screenOrientation="sensorLandscape" >
+58-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:22:13-56
+59            <intent-filter>
+59-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:25:13-28:29
+60                <action android:name="android.intent.action.MAIN" />
+60-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:26:17-69
+60-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:26:25-66
+61
+62                <category android:name="android.intent.category.LAUNCHER" />
+62-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:27:17-77
+62-->/home/runner/work/PlayGround/PlayGround/android/app/src/main/AndroidManifest.xml:27:27-74
+63            </intent-filter>
+64        </activity>
+65
+66        <meta-data
+66-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:22:9-24:37
+67            android:name="com.google.android.play.billingclient.version"
+67-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:23:13-73
+68            android:value="8.0.0" />
+68-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:24:13-34
+69
+70        <activity
+70-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:26:9-30:75
+71            android:name="com.android.billingclient.api.ProxyBillingActivity"
+71-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:27:13-78
+72            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+72-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:28:13-96
+73            android:exported="false"
+73-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:29:13-37
+74            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+74-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:30:13-72
+75        <activity
+75-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:31:9-35:75
+76            android:name="com.android.billingclient.api.ProxyBillingActivityV2"
+76-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:32:13-80
+77            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+77-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:33:13-96
+78            android:exported="false"
+78-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:34:13-37
+79            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+79-->[com.android.billingclient:billing:8.0.0] /home/runner/.gradle/caches/8.13/transforms/eb729f11d4a46072d99894224ca366c2/transformed/billing-8.0.0/AndroidManifest.xml:35:13-72
+80        <activity
+80-->[com.google.android.gms:play-services-base:18.5.0] /home/runner/.gradle/caches/8.13/transforms/8e1bfff0fccc37bf6be87e97830492a6/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:9-173
+81            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+81-->[com.google.android.gms:play-services-base:18.5.0] /home/runner/.gradle/caches/8.13/transforms/8e1bfff0fccc37bf6be87e97830492a6/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:19-85
+82            android:exported="false"
+82-->[com.google.android.gms:play-services-base:18.5.0] /home/runner/.gradle/caches/8.13/transforms/8e1bfff0fccc37bf6be87e97830492a6/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:146-170
+83            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+83-->[com.google.android.gms:play-services-base:18.5.0] /home/runner/.gradle/caches/8.13/transforms/8e1bfff0fccc37bf6be87e97830492a6/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:86-145
+84
+85        <meta-data
+85-->[com.google.android.gms:play-services-basement:18.4.0] /home/runner/.gradle/caches/8.13/transforms/2ab24ab0bf75c315555f53bbc3a7af21/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:9-122
+86            android:name="com.google.android.gms.version"
+86-->[com.google.android.gms:play-services-basement:18.4.0] /home/runner/.gradle/caches/8.13/transforms/2ab24ab0bf75c315555f53bbc3a7af21/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:20-65
+87            android:value="@integer/google_play_services_version" />
+87-->[com.google.android.gms:play-services-basement:18.4.0] /home/runner/.gradle/caches/8.13/transforms/2ab24ab0bf75c315555f53bbc3a7af21/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:66-119
+88
+89        <provider
+89-->[androidx.emoji2:emoji2:1.3.0] /home/runner/.gradle/caches/8.13/transforms/576635c01a185a4a8b54e5384ccc88c4/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+90            android:name="androidx.startup.InitializationProvider"
+90-->[androidx.emoji2:emoji2:1.3.0] /home/runner/.gradle/caches/8.13/transforms/576635c01a185a4a8b54e5384ccc88c4/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+91            android:authorities="com.coldshot.game.androidx-startup"
+91-->[androidx.emoji2:emoji2:1.3.0] /home/runner/.gradle/caches/8.13/transforms/576635c01a185a4a8b54e5384ccc88c4/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+92            android:exported="false" >
+92-->[androidx.emoji2:emoji2:1.3.0] /home/runner/.gradle/caches/8.13/transforms/576635c01a185a4a8b54e5384ccc88c4/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+93            <meta-data
+93-->[androidx.emoji2:emoji2:1.3.0] /home/runner/.gradle/caches/8.13/transforms/576635c01a185a4a8b54e5384ccc88c4/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+94                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+94-->[androidx.emoji2:emoji2:1.3.0] /home/runner/.gradle/caches/8.13/transforms/576635c01a185a4a8b54e5384ccc88c4/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+95                android:value="androidx.startup" />
+95-->[androidx.emoji2:emoji2:1.3.0] /home/runner/.gradle/caches/8.13/transforms/576635c01a185a4a8b54e5384ccc88c4/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+96            <meta-data
+96-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/runner/.gradle/caches/8.13/transforms/36ac0141879dd407d1e8a3ec14fbecbb/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
+97                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+97-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/runner/.gradle/caches/8.13/transforms/36ac0141879dd407d1e8a3ec14fbecbb/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
+98                android:value="androidx.startup" />
+98-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/runner/.gradle/caches/8.13/transforms/36ac0141879dd407d1e8a3ec14fbecbb/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
+99            <meta-data
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+100                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+101                android:value="androidx.startup" />
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+102        </provider>
+103
+104        <receiver
+104-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+105            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+105-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+106            android:directBootAware="false"
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+107            android:enabled="true"
+107-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+108            android:exported="true"
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+109            android:permission="android.permission.DUMP" >
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+110            <intent-filter>
+110-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+111                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+112            </intent-filter>
+113            <intent-filter>
+113-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+114                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+115            </intent-filter>
+116            <intent-filter>
+116-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+117                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+117-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+117-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+118            </intent-filter>
+119            <intent-filter>
+119-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+120                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+120-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+120-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/runner/.gradle/caches/8.13/transforms/bcdf1bfaa3d0f80a97aa4fbff46027e0/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+121            </intent-filter>
+122        </receiver>
+123
+124        <service
+124-->[com.google.android.datatransport:transport-backend-cct:3.1.8] /home/runner/.gradle/caches/8.13/transforms/0996d56632a332f145ba56da499fc8a0/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:28:9-34:19
+125            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+125-->[com.google.android.datatransport:transport-backend-cct:3.1.8] /home/runner/.gradle/caches/8.13/transforms/0996d56632a332f145ba56da499fc8a0/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:29:13-103
+126            android:exported="false" >
+126-->[com.google.android.datatransport:transport-backend-cct:3.1.8] /home/runner/.gradle/caches/8.13/transforms/0996d56632a332f145ba56da499fc8a0/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:30:13-37
+127            <meta-data
+127-->[com.google.android.datatransport:transport-backend-cct:3.1.8] /home/runner/.gradle/caches/8.13/transforms/0996d56632a332f145ba56da499fc8a0/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:31:13-33:39
+128                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+128-->[com.google.android.datatransport:transport-backend-cct:3.1.8] /home/runner/.gradle/caches/8.13/transforms/0996d56632a332f145ba56da499fc8a0/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:32:17-94
+129                android:value="cct" />
+129-->[com.google.android.datatransport:transport-backend-cct:3.1.8] /home/runner/.gradle/caches/8.13/transforms/0996d56632a332f145ba56da499fc8a0/transformed/transport-backend-cct-3.1.8/AndroidManifest.xml:33:17-36
+130        </service>
+131        <service
+131-->[com.google.android.datatransport:transport-runtime:3.1.8] /home/runner/.gradle/caches/8.13/transforms/4be973c8a96505e4f21191f53a87a1c6/transformed/transport-runtime-3.1.8/AndroidManifest.xml:26:9-30:19
+132            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+132-->[com.google.android.datatransport:transport-runtime:3.1.8] /home/runner/.gradle/caches/8.13/transforms/4be973c8a96505e4f21191f53a87a1c6/transformed/transport-runtime-3.1.8/AndroidManifest.xml:27:13-117
+133            android:exported="false"
+133-->[com.google.android.datatransport:transport-runtime:3.1.8] /home/runner/.gradle/caches/8.13/transforms/4be973c8a96505e4f21191f53a87a1c6/transformed/transport-runtime-3.1.8/AndroidManifest.xml:28:13-37
+134            android:permission="android.permission.BIND_JOB_SERVICE" >
+134-->[com.google.android.datatransport:transport-runtime:3.1.8] /home/runner/.gradle/caches/8.13/transforms/4be973c8a96505e4f21191f53a87a1c6/transformed/transport-runtime-3.1.8/AndroidManifest.xml:29:13-69
+135        </service>
+136
+137        <receiver
+137-->[com.google.android.datatransport:transport-runtime:3.1.8] /home/runner/.gradle/caches/8.13/transforms/4be973c8a96505e4f21191f53a87a1c6/transformed/transport-runtime-3.1.8/AndroidManifest.xml:32:9-34:40
+138            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+138-->[com.google.android.datatransport:transport-runtime:3.1.8] /home/runner/.gradle/caches/8.13/transforms/4be973c8a96505e4f21191f53a87a1c6/transformed/transport-runtime-3.1.8/AndroidManifest.xml:33:13-132
+139            android:exported="false" />
+139-->[com.google.android.datatransport:transport-runtime:3.1.8] /home/runner/.gradle/caches/8.13/transforms/4be973c8a96505e4f21191f53a87a1c6/transformed/transport-runtime-3.1.8/AndroidManifest.xml:34:13-37
+140    </application>
+141
+142</manifest>

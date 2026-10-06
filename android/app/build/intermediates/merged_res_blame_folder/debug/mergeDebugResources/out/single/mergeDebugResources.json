@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.coldshot.game.app-debug-26:/drawable_ic_launcher.xml.flat",
+        "source": "com.coldshot.game.app-main-28:/drawable/ic_launcher.xml"
+    },
+    {
+        "merged": "/home/runner/.gradle/daemon/8.13/com.coldshot.game.app-debug-26:/drawable_ic_launcher.xml.flat",
+        "source": "/home/runner/.gradle/daemon/8.13/com.coldshot.game.app-main-28:/drawable/ic_launcher.xml"
+    }
+]

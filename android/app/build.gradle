@@ -1,0 +1,36 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.coldshot.game"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.coldshot.game"
+        minSdk = 26
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    buildTypes {
+        release {
+            // minify/desligado por padrão (WebView + assets locais)
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    // Google Play Billing — compras reais (Google Pay via Play Store)
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
+}
