@@ -1,0 +1,205 @@
+{
+  "count": 40,
+  "effects": [
+    {
+      "id": "neon_grid",
+      "label": "Grade Neon",
+      "desc": "Grade cyberpunk em perspectiva com brilho cyan/magenta."
+    },
+    {
+      "id": "glitch",
+      "label": "Glitch Digital",
+      "desc": "Fatiamento horizontal + deslocamento RGB de TV com defeito."
+    },
+    {
+      "id": "chromatic",
+      "label": "Aberração Cromática",
+      "desc": "Bordas RGB deslocadas estilo lente anamórfica."
+    },
+    {
+      "id": "vhs",
+      "label": "VHS Retrô",
+      "desc": "Tracking, ruído de fita e data OSD anos 80."
+    },
+    {
+      "id": "scanlines",
+      "label": "Scanlines CRT",
+      "desc": "Linhas de monitor tubo + vinheta suave."
+    },
+    {
+      "id": "particles",
+      "label": "Partículas Neon",
+      "desc": "Poeira luminosa flutuante sobre a cena."
+    },
+    {
+      "id": "neon_rain",
+      "label": "Chuva Neon",
+      "desc": "Chuva inclinada com reflexo de néon (Matrix rain curta)."
+    },
+    {
+      "id": "cyber_grid",
+      "label": "Horizonte Synthwave",
+      "desc": "Sol retrô + grade infinita ao pôr do sol."
+    },
+    {
+      "id": "hologram",
+      "label": "Holograma",
+      "desc": "Projeção translúcida com flicker e linhas de varredura."
+    },
+    {
+      "id": "bloom",
+      "label": "Bloom Suave",
+      "desc": "Brilho difuso nas altas luzes."
+    },
+    {
+      "id": "lens_flare",
+      "label": "Lens Flare",
+      "desc": "Reflexo de lente varrendo a cena."
+    },
+    {
+      "id": "film_grain",
+      "label": "Grão de Filme",
+      "desc": "Textura 35mm animada."
+    },
+    {
+      "id": "shake",
+      "label": "Camera Shake",
+      "desc": "Tremor de câmera de ação na batida."
+    },
+    {
+      "id": "zoom_pulse",
+      "label": "Zoom Pulsante",
+      "desc": "Dolly-in rítmico com o beat."
+    },
+    {
+      "id": "dolly",
+      "label": "Dolly Cinemático",
+      "desc": "Aproximação lenta e contínua."
+    },
+    {
+      "id": "orbit",
+      "label": "Órbita",
+      "desc": "Deriva lateral senoidal como drone."
+    },
+    {
+      "id": "strobe",
+      "label": "Strobe Club",
+      "desc": "Piscadas de luz de boate no clímax."
+    },
+    {
+      "id": "matrix_rain",
+      "label": "Matrix Rain",
+      "desc": "Cascata de glifos verdes caindo."
+    },
+    {
+      "id": "plasma",
+      "label": "Plasma",
+      "desc": "Neblina de plasma colorida em movimento."
+    },
+    {
+      "id": "kaleidoscope",
+      "label": "Caleidoscópio",
+      "desc": "Espelhamento radial psicodélico leve."
+    },
+    {
+      "id": "mirror",
+      "label": "Espelho",
+      "desc": "Simetria vertical cinematográfica."
+    },
+    {
+      "id": "wave",
+      "label": "Onda",
+      "desc": "Distorção ondulante de calor/água."
+    },
+    {
+      "id": "pixelate",
+      "label": "Pixelate 8-bit",
+      "desc": "Mosaico retrô que resolve para nítido."
+    },
+    {
+      "id": "noise",
+      "label": "Ruído Digital",
+      "desc": "Interferência de transmissão."
+    },
+    {
+      "id": "vignette",
+      "label": "Vinheta Cinema",
+      "desc": "Escurece bordas p/ foco central."
+    },
+    {
+      "id": "light_leak",
+      "label": "Light Leak",
+      "desc": "Vazamento de luz âmbar de película."
+    },
+    {
+      "id": "god_rays",
+      "label": "God Rays",
+      "desc": "Feixes volumétricos do topo."
+    },
+    {
+      "id": "datamosh",
+      "label": "Datamosh",
+      "desc": "Blocos comprimidos e arrasto de movimento."
+    },
+    {
+      "id": "synthwave_sun",
+      "label": "Sol Synthwave",
+      "desc": "Sol listrado gigante no horizonte."
+    },
+    {
+      "id": "laser",
+      "label": "Lasers",
+      "desc": "Varreduras de laser rosa/cyan."
+    },
+    {
+      "id": "bokeh",
+      "label": "Bokeh Noturno",
+      "desc": "Orbes desfocados de cidade à noite."
+    },
+    {
+      "id": "aurora",
+      "label": "Aurora",
+      "desc": "Cortinas de aurora boreal no céu."
+    },
+    {
+      "id": "tunnel",
+      "label": "Túnel Neon",
+      "desc": "Mergulho em alta velocidade por um túnel de luz."
+    },
+    {
+      "id": "hyperdrive",
+      "label": "Hiperdrive",
+      "desc": "Salto warp com estrias radiais de velocidade."
+    },
+    {
+      "id": "fire",
+      "label": "Chamas",
+      "desc": "Brilho quente e brasas subindo pela cena."
+    },
+    {
+      "id": "ice",
+      "label": "Gelo Cristal",
+      "desc": "Tom frio azulado com cintilação de cristal."
+    },
+    {
+      "id": "storm",
+      "label": "Tempestade",
+      "desc": "Relâmpagos + chuva forte de tormenta."
+    },
+    {
+      "id": "golden_dust",
+      "label": "Poeira Dourada",
+      "desc": "Partículas douradas cinematográficas flutuando."
+    },
+    {
+      "id": "billboard",
+      "label": "Outdoors Neon",
+      "desc": "Letreiros vibrantes de cidade cyberpunk."
+    },
+    {
+      "id": "slowmo",
+      "label": "Câmera Lenta",
+      "desc": "Deriva suave em slow motion dramático."
+    }
+  ]
+}
