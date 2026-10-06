@@ -280,3 +280,64 @@ def test_orchestrator_accepts_json_base64_and_fails_safe(monkeypatch, tmp_path):
 
     monkeypatch.setattr(engines, "ORCHESTRATOR_URL", "")
     assert engines.try_orchestrator("prompt", 8, "16:9", "720p", tmp_path / "y.mp4") is False
+
+
+def test_all_key_prefixes_identified():
+    from providers import infer_provider
+
+    matrix = {
+        "AIzaSyTeste1234567890": "google",
+        "sk-ant-api-teste": "anthropic",
+        "sk-or-v1-abc123": "openrouter",
+        "sk-or-abc123": "openrouter",
+        "pplx-abc123": "perplexity",
+        "fw_abc123": "fireworks",
+        "csk-abc123": "cerebras",
+        "nvapi-abc123": "nvidia",
+        "gsk_teste_chave": "groq",
+        "hf_teste": "huggingface",
+        "r8_teste": "replicate",
+        "xai-teste": "xai",
+        "sk-proj-teste": "openai",
+    }
+    for key, want in matrix.items():
+        assert infer_provider(key) == want, f"{key[:10]} -> {infer_provider(key)} != {want}"
+
+
+def test_every_registry_base_url_identified():
+    from providers import _HIDDEN_BASES, infer_provider
+
+    for name, entry in _HIDDEN_BASES.items():
+        base = entry["base"]
+        got = infer_provider("chave_qualquer", base_url=base)
+        assert got == name, f"base {base} -> {got} != {name}"
+
+
+def test_unknown_base_url_maps_to_openai_compatible():
+    from providers import infer_provider
+
+    assert infer_provider("chave_x", base_url="https://meu-proxy.empresa.local/v1") == "openai_compatible"
+
+
+def test_explicit_provider_names_accepted_by_schema():
+    from app import VideoRequest, DiscoverRequest
+
+    for name in ("openrouter", "groq", "deepseek", "mistral", "xai", "perplexity",
+                 "cerebras", "nvidia", "together", "fireworks", "cohere",
+                 "huggingface", "replicate", "stability", "moonshot", "siliconflow"):
+        assert VideoRequest(prompt="cena", provider=name).provider == name
+        assert DiscoverRequest(api_key="x", provider=name).provider == name
+
+
+def test_ui_selector_shows_ai_names(client):
+    ui = client.get("/")
+    for brand in ("Google — Gemini", "OpenAI — GPT", "Anthropic — Claude",
+                  "OpenRouter", "Groq", "DeepSeek", "Mistral AI", "xAI — Grok"):
+        assert brand in ui.text, f"seletor sem: {brand}"
+
+
+def test_provider_dropdown_values_accepted_via_api(client):
+    r = client.post("/v1/discover", json={"api_key": "sk-or-v1-fake", "provider": "openrouter"})
+    # valida schema (não 422 de Literal); pode cair em erro de rede/chave depois
+    assert r.status_code != 422 or "provider" not in str(r.json().get("detail", "")), r.text[:200]
+    assert r.status_code in (200, 401, 403, 429, 502, 503), f"status inesperado {r.status_code}: {r.text[:200]}"

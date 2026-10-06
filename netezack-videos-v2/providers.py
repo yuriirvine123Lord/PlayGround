@@ -13,7 +13,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import httpx
 
@@ -44,16 +44,30 @@ _HIDDEN_BASES: dict[str, dict[str, Any]] = {
     "huggingface": {"base": "https://router.huggingface.co/v1", "kind": "openai", "video": False, "free": True},
     "replicate": {"base": "https://api.replicate.com/v1", "kind": "openai", "video": False, "free": False},
     "stability": {"base": "https://api.stability.ai/v2beta", "kind": "openai", "video": False, "free": False},
+    "cerebras": {"base": "https://api.cerebras.ai/v1", "kind": "openai", "video": False, "free": False},
+    "nvidia": {"base": "https://integrate.api.nvidia.com/v1", "kind": "openai", "video": False, "free": False},
+    "moonshot": {"base": "https://api.moonshot.ai/v1", "kind": "openai", "video": False, "free": False},
+    "siliconflow": {"base": "https://api.siliconflow.cn/v1", "kind": "openai", "video": False, "free": True},
     # Gratuitas sem chave (usadas como fallback de chat/roteiro, nunca expostas)
     "pollinations": {"base": "https://text.pollinations.ai/openai", "kind": "openai", "video": False, "free": True},
 }
 
+# Mapa host → provedor (construído do registry; base_url do usuário é
+# identificada inteligentemente sem expor nenhuma URL ao cliente).
+_HOST_TO_PROVIDER: dict[str, str] = {}
+for _name, _entry in _HIDDEN_BASES.items():
+    _host = urlparse(_entry["base"]).netloc.lower()
+    if _host:
+        _HOST_TO_PROVIDER[_host] = _name
+del _name, _entry, _host
+
 # Dicas de formato de chave mostradas ao usuário (sem revelar URLs).
 KEY_FORMAT_HINTS = (
-    "Google/Gemini (começa com AIza…), "
-    "OpenAI (sk-…), Anthropic (sk-ant-…), "
-    "Groq (gsk_…), HuggingFace (hf_…), Replicate (r8_…), "
-    "xAI (xai-…), ou selecione o provedor manualmente."
+    "Google/Gemini (começa com AIza…), OpenAI (sk-…), Anthropic (sk-ant-…), "
+    "OpenRouter (sk-or-v1-…), Groq (gsk_…), Perplexity (pplx-…), "
+    "Fireworks (fw_…), Cerebras (csk-…), NVIDIA (nvapi-…), "
+    "HuggingFace (hf_…), Replicate (r8_…), xAI (xai-…), "
+    "DeepSeek/Mistral/Together/etc (auto-detect por probing), ou selecione o provedor manualmente."
 )
 
 VIDEO_MODEL_PRIORITY = (
@@ -146,22 +160,38 @@ def infer_provider(api_key: str, provider: str = "auto", base_url: str | None = 
     if explicit != "auto":
         return explicit
 
-    host = (base_url or "").lower()
-    if "generativelanguage.googleapis.com" in host or "aiplatform.googleapis.com" in host:
-        return "google"
-    if "anthropic.com" in host:
-        return "anthropic"
-    if "api.openai.com" in host:
-        return "openai"
+    # 1) Identificação pela base_url informada (todos os hosts do registry).
+    host = urlparse(base_url or "").netloc.lower()
+    if host:
+        if "aiplatform.googleapis.com" in host:
+            return "google"
+        if host in _HOST_TO_PROVIDER:
+            return _HOST_TO_PROVIDER[host]
+        # Sufixo de domínio (ex.: proxy corporativo no mesmo domínio).
+        for known_host, name in _HOST_TO_PROVIDER.items():
+            if host.endswith(known_host.split(".", 1)[-1]) and "." in known_host:
+                if known_host in host:
+                    return name
+        # Base desconhecida + informada => compatível OpenAI (é a função do campo).
+        if api_key and api_key.strip():
+            return "openai_compatible"
 
+    # 2) Identificação pelo formato/prefixo da chave.
     key = api_key.strip()
     if key.startswith("AIza"):
         return "google"
     if key.startswith("sk-ant-"):
         return "anthropic"
-    if key.startswith("sk-"):
-        return "openai"
-    # Prefixos extras conhecidos (sem probing, só mapeamento seguro).
+    if key.startswith("sk-or-v1-") or key.startswith("sk-or-"):
+        return "openrouter"
+    if key.startswith("pplx-"):
+        return "perplexity"
+    if key.startswith("fw_"):
+        return "fireworks"
+    if key.startswith("csk-"):
+        return "cerebras"
+    if key.startswith("nvapi-"):
+        return "nvidia"
     if key.startswith("gsk_"):
         return "groq"
     if key.startswith("hf_"):
@@ -170,6 +200,8 @@ def infer_provider(api_key: str, provider: str = "auto", base_url: str | None = 
         return "replicate"
     if key.startswith("xai-"):
         return "xai"
+    if key.startswith("sk-"):
+        return "openai"
 
     raise ProviderError(
         "Não foi possível identificar esta chave com segurança. Informe provider e base_url; "
@@ -222,15 +254,17 @@ async def smart_detect_provider(api_key: str, timeout_per_probe: float = 8.0) ->
     key = api_key.strip()
     # 1) Google primeiro (auth diferente).
     google_models = await _probe_google(key, timeout_per_probe)
-    if google_models is not None:
+    if google_models:
         return ("google", GOOGLE_BASE_URL)
-    # 2) Candidatos OpenAI-compatible em ordem de probabilidade.
-    candidates = ["openai", "groq", "deepseek", "together", "openrouter",
-                  "mistral", "fireworks", "xai", "huggingface", "cohere"]
+    # 2) Candidatos OpenAI-compatible: SÓ casa se o catálogo vier não-vazio
+    #    (evita falso positivo de endpoint que devolve 200 sem auth).
+    candidates = ["openai", "groq", "openrouter", "deepseek", "mistral", "together",
+                  "fireworks", "xai", "perplexity", "huggingface", "cohere",
+                  "cerebras", "nvidia", "moonshot", "siliconflow", "replicate"]
     for name in candidates:
         base = _HIDDEN_BASES[name]["base"]
         models = await _probe_openai_models(base, key, timeout_per_probe)
-        if models is not None:
+        if models:
             return (name, base)
     return None
 

@@ -124,7 +124,12 @@ app.add_middleware(
 )
 
 
-ProviderLiteral = Literal["auto", "google", "openai", "anthropic", "openai_compatible"]
+ProviderLiteral = Literal[
+    "auto", "google", "openai", "anthropic", "openai_compatible",
+    "openrouter", "groq", "deepseek", "together", "fireworks", "mistral",
+    "xai", "perplexity", "cohere", "huggingface", "replicate", "stability",
+    "cerebras", "nvidia", "moonshot", "siliconflow",
+]
 
 
 class Credentials(BaseModel):
@@ -607,7 +612,7 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 <button id="discover">IDENTIFICAR</button><button id="clearKey" class="ghost">limpar</button></div>
 <pre id="discovery">status: aguardando chave</pre>
 <details><summary>avançado</summary>
-<label>provedor</label><select id="provider"><option value="auto">auto detectar</option><option value="google">google / gemini / veo</option><option value="openai">openai</option><option value="anthropic">anthropic</option><option value="openai_compatible">openai compatível</option></select>
+<label>provedor / IA</label><select id="provider"><option value="auto">auto detectar (recomendado)</option><option value="google">Google — Gemini / Veo</option><option value="openai">OpenAI — GPT / DALL·E</option><option value="anthropic">Anthropic — Claude</option><option value="openrouter">OpenRouter — GPT, Claude, Llama, DeepSeek…</option><option value="groq">Groq — Llama / Mixtral / Qwen</option><option value="deepseek">DeepSeek — DeepSeek V3/R1</option><option value="mistral">Mistral AI — Mistral / Codestral</option><option value="xai">xAI — Grok</option><option value="perplexity">Perplexity — Sonar</option><option value="together">Together AI — Llama / Qwen</option><option value="fireworks">Fireworks AI — Llama / Mixtral</option><option value="cohere">Cohere — Command R</option><option value="huggingface">HuggingFace — Llama / Qwen / Gemma</option><option value="cerebras">Cerebras — Llama</option><option value="nvidia">NVIDIA — NIM / Llama</option><option value="openai_compatible">Custom — OpenAI compatível (base própria)</option></select>
 <label>base url customizada</label><input id="base" placeholder="deixe vazio na maioria das vezes"></details>
 </div>
 
