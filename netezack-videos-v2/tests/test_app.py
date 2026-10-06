@@ -134,6 +134,7 @@ def test_video_endpoint_is_async_and_does_not_call_other_providers(client, monke
         return None
 
     monkeypatch.setattr(app_module.asyncio, "create_task", fake_create_task)
+    FakeAsyncClient.last_requests = []
     response = client.post(
         "/v1/videos",
         json={
@@ -142,9 +143,68 @@ def test_video_endpoint_is_async_and_does_not_call_other_providers(client, monke
             "prompt": "Uma cena cinematográfica",
         },
     )
+    # Qualquer provedor e aceito: vídeo sai via IA open-source + render local.
+    assert response.status_code == 202, response.text
+    assert response.json()["provider"] == "openai"
+    assert created == [True]
+    # Assincrono: nenhuma chamada HTTP acontece durante o request.
+    assert FakeAsyncClient.last_requests == []
+
+
+def test_video_accepts_openai_compatible_explicit_provider(client, monkeypatch):
+    monkeypatch.setattr(app_module.asyncio, "create_task",
+                        lambda coro: (coro.close(), None)[1])
+    response = client.post(
+        "/v1/videos",
+        json={
+            "api_key": "gsk_" + "x" * 25,
+            "provider": "openai_compatible",
+            "base_url": "https://api.groq.com/openai/v1",
+            "prompt": "cena neon",
+            "duration_seconds": 8,
+        },
+    )
+    assert response.status_code == 202, response.text
+
+
+def test_video_without_fallback_non_google_422(client, monkeypatch):
+    monkeypatch.setattr(app_module.asyncio, "create_task",
+                        lambda coro: (coro.close(), None)[1])
+    response = client.post(
+        "/v1/videos",
+        json={
+            "api_key": "sk-" + "x" * 25,
+            "provider": "openai",
+            "prompt": "cena neon",
+            "use_fallback": False,
+        },
+    )
     assert response.status_code == 422
-    assert "chave Google" in response.json()["detail"]
-    assert not created
+    assert "fallback" in response.json()["detail"]
+
+
+def test_chat_model_skips_audio_models():
+    from providers import choose_chat_model
+
+    models = ["whisper-large-v3-turbo", "orpheus-arabic-saudi", "qwen3.8-27b",
+              "llama-prompt-guard-2-86m", "allam-2-7b", "gpt-oss-20b"]
+    assert choose_chat_model("openai_compatible", models) in {"qwen3.8-27b", "allam-2-7b", "gpt-oss-20b"}
+
+
+def test_ai_video_falls_back_when_network_fails(monkeypatch):
+    import ai_video
+
+    def boom(*args, **kwargs):
+        raise OSError("sem rede")
+
+    monkeypatch.setattr(ai_video.urllib.request, "urlopen", boom)
+    ai_video._ai_down_until = 0.0
+    assert ai_video.fetch_ai_frames("teste", 2, 64, 36) is None
+    # apos a 1a falha, IA fica desligada por 10 min (nao trava o job)
+    assert ai_video.ai_available() is False
+    assert ai_video.render_ai_mp4("x", None, 8, "720p", "16:9",
+                                  app_module.MEDIA_DIR / "nao_deve.mp4") is None
+    ai_video._ai_down_until = 0.0
 
 
 def test_openapi_contains_core_routes(client):

@@ -330,6 +330,18 @@ def _first_available(models: Iterable[str], priority: Iterable[str]) -> str | No
     return normalized[0] if normalized else None
 
 
+_NON_CHAT_MARKERS = (
+    "whisper", "tts", "stt", "audio", "orpheus", "embedding", "embed", "rerank",
+    "moderation", "guard", "vision", "image", "video", "diffusion", "speak",
+    "kokoro", "vits", "f5-tts", "riva", "playai-tts",
+)
+
+
+def _looks_like_chat_model(name: str) -> bool:
+    n = normalize_model_name(name).lower()
+    return not any(marker in n for marker in _NON_CHAT_MARKERS)
+
+
 def choose_chat_model(provider: str, models: list[str], requested: str | None = None) -> str:
     if requested:
         return normalize_model_name(requested)
@@ -340,15 +352,17 @@ def choose_chat_model(provider: str, models: list[str], requested: str | None = 
         selected = _first_available(models, ANTHROPIC_CHAT_MODEL_PRIORITY)
         return selected or "claude-sonnet-4-6"
     # Registry interno e openai_compatible: usa catálogo ao vivo se houver.
-    normalized = [normalize_model_name(m) for m in models]
+    chatable = [m for m in models if _looks_like_chat_model(m)]
+    pool = chatable or models  # se o catálogo for todo de áudio, tenta mesmo assim
+    normalized = [normalize_model_name(m) for m in pool]
     if normalized:
         for preferred in OPENAI_CHAT_MODEL_PRIORITY:
             if preferred in normalized:
                 return preferred
-        # Para provedores alternativos (groq/deepseek/etc), usa o 1º do catálogo.
+        # Para provedores alternativos (groq/deepseek/etc), usa o 1º de chat do catálogo.
         if provider in _HIDDEN_BASES and provider not in ("openai", "openai_compatible"):
             return normalized[0]
-    selected = _first_available(models, OPENAI_CHAT_MODEL_PRIORITY)
+    selected = _first_available(pool, OPENAI_CHAT_MODEL_PRIORITY)
     if selected:
         return selected
     raise ProviderError(

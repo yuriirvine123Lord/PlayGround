@@ -27,6 +27,7 @@ from providers import (
     smart_detect_provider,
 )
 from video_fallback import render_local_mp4
+from ai_video import render_ai_mp4, AI_MIN_DURATION, AI_MAX_DURATION
 
 load_dotenv()
 
@@ -35,6 +36,7 @@ MEDIA_DIR = Path(os.getenv("MEDIA_DIR", str(APP_DIR / "media"))).resolve()
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 POLL_INTERVAL = float(os.getenv("VEO_POLL_INTERVAL_SECONDS", "10"))
 JOB_TIMEOUT = float(os.getenv("VEO_JOB_TIMEOUT_SECONDS", "900"))
+EXPAND_TIMEOUT = float(os.getenv("EXPAND_TIMEOUT_SECONDS", "20"))
 
 # Porta primária (uvicorn CLI usa o mesmo ${PORT:-8080}).
 PRIMARY_PORT = int(os.getenv("PORT", "8080"))
@@ -299,25 +301,33 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
         raise _provider_error(exc) from exc
 
 
-async def _expand_prompt(provider: Any, provider_name: str, prompt: str, duration_s: int = 8) -> str:
+async def _expand_prompt_inner(provider: Any, provider_name: str, prompt: str, duration_s: int) -> str:
     """A IA transforma a ordem do usuário num roteiro visual rico (best effort)."""
+    catalog = await provider.discover()
+    model = choose_chat_model(provider_name, catalog.models)
+    if duration_s <= 60:
+        span = f"{duration_s} segundos"
+    else:
+        span = (f"{duration_s} segundos (~{duration_s // 60} min): divida em cenas curtas de ~8s "
+                f"que mudam de plano, cor, movimento e luz para o vídeo não repetir")
+    out = await provider.chat(model, [
+        {"role": "system", "content": (
+            "Você é um diretor de cinema cyberpunk. Expanda a ordem do usuário num roteiro "
+            f"visual de {span}: ação, câmera, luz, cor e áudio. Responda em 1 parágrafo, "
+            "em inglês, sem texto na tela.")},
+        {"role": "user", "content": prompt},
+    ], 0.7)
+    text = str(out.get("text", "")).strip()
+    return text[:1200] if text else prompt
+
+
+async def _expand_prompt(provider: Any, provider_name: str, prompt: str, duration_s: int = 8) -> str:
+    """Envolve a expansão num teto de 20s — rede lenta nunca trava o job de vídeo."""
     try:
-        catalog = await provider.discover()
-        model = choose_chat_model(provider_name, catalog.models)
-        if duration_s <= 60:
-            span = f"{duration_s} segundos"
-        else:
-            span = (f"{duration_s} segundos (~{duration_s // 60} min): divida em cenas curtas de ~8s "
-                    f"que mudam de plano, cor, movimento e luz para o vídeo não repetir")
-        out = await provider.chat(model, [
-            {"role": "system", "content": (
-                "Você é um diretor de cinema cyberpunk. Expanda a ordem do usuário num roteiro "
-                f"visual de {span}: ação, câmera, luz, cor e áudio. Responda em 1 parágrafo, "
-                "em inglês, sem texto na tela.")},
-            {"role": "user", "content": prompt},
-        ], 0.7)
-        text = str(out.get("text", "")).strip()
-        return text[:1200] if text else prompt
+        return await asyncio.wait_for(
+            _expand_prompt_inner(provider, provider_name, prompt, duration_s),
+            timeout=EXPAND_TIMEOUT,
+        )
     except Exception:
         return prompt
 
@@ -419,15 +429,25 @@ async def _run_video_job(job_id: str, request: VideoRequest, key: str, provider_
         resolution = "1080p" if request.resolution == "4k" else (request.resolution or "720p")
         if duration > 120 and resolution == "1080p":
             resolution = "720p"  # vídeos longos: prioriza velocidade e tamanho
-        _set(job_id, progress=55,
-             stage=f"renderizando {duration}s em {resolution} com efeitos: {', '.join(effects[:3])}")
         target = MEDIA_DIR / f"{job_id}.mp4"
-        final_effects = await asyncio.to_thread(
-            render_local_mp4, rich_prompt,
-            effects, duration, resolution,
-            request.aspect_ratio, target,
-            on_frame=_on_frame_throttled(job_id),
-        )
+        final_effects = None
+        # Vídeos de 4s..60s: primeiro tenta quadros de IA open-source (FLUX).
+        if AI_MIN_DURATION <= duration <= AI_MAX_DURATION:
+            _set(job_id, progress=60, stage="IA gerando quadros (FLUX open-source)…")
+            final_effects = await asyncio.to_thread(
+                render_ai_mp4, rich_prompt, effects, duration, resolution,
+                request.aspect_ratio, target, seed=7,
+                on_frame=_on_frame_throttled(job_id),
+            )
+        if final_effects is None:
+            _set(job_id, progress=55,
+                 stage=f"renderizando {duration}s em {resolution} com efeitos: {', '.join(effects[:3])}")
+            final_effects = await asyncio.to_thread(
+                render_local_mp4, rich_prompt,
+                effects, duration, resolution,
+                request.aspect_ratio, target,
+                on_frame=_on_frame_throttled(job_id),
+            )
         _set(job_id, status="completed", progress=100, stage="pronto",
               download_url=f"/v1/videos/{job_id}/download", effects=final_effects,
               fallback_used=(job.fallback_used or provider_name != "google"))
@@ -446,11 +466,15 @@ async def _run_video_job(job_id: str, request: VideoRequest, key: str, provider_
 @app.post("/v1/videos", status_code=202, response_model=JobState)
 async def create_video(request: VideoRequest) -> JobState:
     key, provider_name, provider = await _credentials(request)
-    # Compatibilidade: provider forçado diferente de google continua 422 explícito.
-    if provider_name != "google" and request.provider != "auto":
+    # Qualquer provedor gera vídeo: google<=8s via Veo; demais via IA open-source
+    # (quadros FLUX) + render local com efeitos. So bloqueia se o usuario exigir
+    # provedor remoto sem fallback (nenhum deles, alem do Veo, gera vídeo).
+    if provider_name != "google" and not request.use_fallback:
         raise HTTPException(
             status_code=422,
-            detail="A geração Veo usa uma chave Google/Gemini. OpenAI, Anthropic e endpoints compatíveis ficam disponíveis para /v1/chat.",
+            detail=(f"O provedor {provider_name} não gera vídeo por API remota. "
+                    "Mantenha use_fallback=true para gerar o vídeo com IA local, "
+                    "ou use chave Google/Gemini para Veo."),
         )
     job_id = uuid.uuid4().hex
     job = JobState(job_id=job_id, status="queued", provider=provider_name,
@@ -597,7 +621,7 @@ $('discover').onclick=async()=>{const b=$('discover');b.disabled=true;$('discove
 $('chat').onclick=async()=>{const t=$('chatPrompt').value.trim();if(!t)return;bubble('user',t);const b=$('chat');b.disabled=true;try{const j=await call('/v1/chat',{...creds(),messages:[{role:'user',content:t}]});$('chatOut').textContent=j.text;$('chatOut').style.display='block';bubble('ai',j.text.slice(0,900))}catch(e){bubble('ai','erro: '+e.message)}finally{b.disabled=false}};
 $('copyChat').onclick=async()=>{await navigator.clipboard.writeText($('chatOut').textContent||'');$('copyChat').textContent='Copiado ✓';setTimeout(()=>$('copyChat').textContent='Copiar resposta',1200)};
 $('sendToVideo').onclick=()=>{$('videoPrompt').value=$('chatOut').textContent||$('chatPrompt').value};
-$('video').onclick=async()=>{const b=$('video');b.disabled=true;$('player').style.display='none';$('dl').style.display='none';$('previewBox').style.display='none';$('videoOut').textContent='enfileirando…';try{const body={...creds(),prompt:$('videoPrompt').value,aspect_ratio:$('aspect').value,resolution:$('res').value,duration_seconds:parseInt($('dur').value,10),effects:[...SEL]};if(!body.prompt.trim())throw new Error('descreva o vídeo primeiro.');const j=await call('/v1/videos',body);let s=j;$('videoOut').textContent='job '+j.job_id+' · '+j.provider+' · efeitos: '+(j.effects||[]).join(', ');while(s.status==='queued'||s.status==='generating'){await new Promise(r=>setTimeout(r,1200));const r=await fetch('/v1/videos/'+j.job_id);s=await r.json();$('bar').style.width=(s.progress||0)+'%';$('stage').textContent=(s.stage||s.status)+'  ['+(s.progress||0)+'%]  '+(s.frames?(s.frames+'/'+s.total_frames+' quadros'):'');if(s.preview_url){$('previewBox').style.display='block';$('previewImg').src=location.origin+s.preview_url+'?t='+Date.now()}$('videoOut').textContent='job '+j.job_id+'\n'+(s.stage||s.status)+' ['+(s.progress||0)+'%]'+(s.frames?'\nframes: '+s.frames+'/'+s.total_frames:'')+'\nefeitos: '+(s.effects||[]).join(', ')+(s.fallback_used?'\nmodo: render local com efeitos':'\nmodo: veo')}$('bar').style.width='100%';if(s.status==='completed'&&s.download_url){const url=location.origin+s.download_url;$('player').src=url;$('player').style.display='block';$('dl').href=url;$('dl').style.display='inline';$('stage').textContent='concluído — vídeo pronto';$('videoOut').textContent+='\n\nPRONTO: '+url}else{$('stage').textContent='falhou';$('videoOut').textContent+='\n\nfalhou: '+(s.error||'desconhecido')}}catch(e){$('stage').textContent='erro';$('videoOut').textContent='erro: '+e.message}finally{b.disabled=false}};
+$('video').onclick=async()=>{const b=$('video');b.disabled=true;$('player').style.display='none';$('dl').style.display='none';$('previewBox').style.display='none';$('videoOut').textContent='enfileirando…';try{const body={...creds(),prompt:$('videoPrompt').value,aspect_ratio:$('aspect').value,resolution:$('res').value,duration_seconds:parseInt($('dur').value,10),effects:[...SEL]};if(!body.prompt.trim())throw new Error('descreva o vídeo primeiro.');const j=await call('/v1/videos',body);let s=j;$('videoOut').textContent='job '+j.job_id+' · '+j.provider+' · efeitos: '+(j.effects||[]).join(', ');while(s.status==='queued'||s.status==='generating'){await new Promise(r=>setTimeout(r,1200));const r=await fetch('/v1/videos/'+j.job_id);s=await r.json();$('bar').style.width=(s.progress||0)+'%';$('stage').textContent=(s.stage||s.status)+'  ['+(s.progress||0)+'%]  '+(s.frames?(s.frames+'/'+s.total_frames+' quadros'):'');if(s.preview_url){$('previewBox').style.display='block';$('previewImg').src=location.origin+s.preview_url+'?t='+Date.now()}$('videoOut').textContent='job '+j.job_id+'\n'+(s.stage||s.status)+' ['+(s.progress||0)+'%]'+(s.frames?'\nframes: '+s.frames+'/'+s.total_frames:'')+'\nefeitos: '+(s.effects||[]).join(', ')+(s.fallback_used?'\nmodo: IA open-source + efeitos (fallback local)':'\nmodo: veo')}$('bar').style.width='100%';if(s.status==='completed'&&s.download_url){const url=location.origin+s.download_url;$('player').src=url;$('player').style.display='block';$('dl').href=url;$('dl').style.display='inline';$('stage').textContent='concluído — vídeo pronto';$('videoOut').textContent+='\n\nPRONTO: '+url}else{$('stage').textContent='falhou';$('videoOut').textContent+='\n\nfalhou: '+(s.error||'desconhecido')}}catch(e){$('stage').textContent='erro';$('videoOut').textContent='erro: '+e.message}finally{b.disabled=false}};
 </script></body></html>"""
 
 
