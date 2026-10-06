@@ -16,3 +16,7 @@
 - 👤 [Explore the creator's projects](https://omgithub.com/yuriirvine123Lord).
 - 🌍 [Create with OMGithub](https://omgithub.com).
 <!-- omgithub:readme:end -->
+
+---
+
+**Produzida Por Yuri Lord && Agente Falcão ⚡**

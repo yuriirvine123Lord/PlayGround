@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
 
@@ -35,11 +36,81 @@ MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 POLL_INTERVAL = float(os.getenv("VEO_POLL_INTERVAL_SECONDS", "10"))
 JOB_TIMEOUT = float(os.getenv("VEO_JOB_TIMEOUT_SECONDS", "900"))
 
+# Porta primária (uvicorn CLI usa o mesmo ${PORT:-8080}).
+PRIMARY_PORT = int(os.getenv("PORT", "8080"))
+
+
+async def _pump(src: asyncio.StreamReader, dst: asyncio.StreamWriter) -> None:
+    try:
+        while True:
+            data = await src.read(65536)
+            if not data:
+                break
+            dst.write(data)
+            await dst.drain()
+    except Exception:
+        pass
+    finally:
+        try:
+            dst.close()
+        except Exception:
+            pass
+
+
+_PROXY_SERVERS: list[asyncio.AbstractServer] = []
+
+
+async def _start_proxy(listen_port: int, dest_port: int) -> asyncio.AbstractServer:
+    """Serve também a outra porta padrão (8000/8080) — match do proxy Railway."""
+
+    async def handle(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        try:
+            up_reader, up_writer = await asyncio.open_connection("127.0.0.1", dest_port)
+        except Exception:
+            try:
+                writer.close()
+            except Exception:
+                pass
+            return
+        try:
+            await asyncio.gather(
+                _pump(reader, up_writer),
+                _pump(up_reader, writer),
+                return_exceptions=True,
+            )
+        finally:
+            for w in (up_writer, writer):
+                try:
+                    w.close()
+                except Exception:
+                    pass
+
+    return await asyncio.start_server(handle, "0.0.0.0", listen_port)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    for port in (8000, 8080):
+        if port == PRIMARY_PORT:
+            continue
+        try:
+            _PROXY_SERVERS.append(await _start_proxy(port, PRIMARY_PORT))
+        except OSError:
+            pass
+    yield
+    for srv in _PROXY_SERVERS:
+        try:
+            srv.close()
+        except Exception:
+            pass
+
+
 app = FastAPI(
-    title="Netzack Video V2",
+    title="⚡Netezack Vídeos V2 ⚡",
     version="2.1.0",
-    description="Netzack Video V2 — chat prompt-driven com preview real de geração. "
+    description="⚡Netezack Vídeos V2 ⚡ — chat prompt-driven com preview real de geração. "
                 "Só a API key: o sistema identifica o provedor e as base URLs ficam no servidor.",
+    lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
@@ -81,7 +152,8 @@ class VideoRequest(Credentials):
     model: str | None = None
     aspect_ratio: Literal["16:9", "9:16"] = "16:9"
     resolution: Literal["720p", "1080p", "4k"] = "720p"
-    duration_seconds: int | None = Field(default=8, ge=2, le=12)
+    duration_seconds: int | None = Field(default=8, ge=2, le=600,
+                                         description="2s a 600s (10 minutos).")
     generate_audio: bool | None = True
     negative_prompt: str | None = Field(default=None, max_length=5_000)
     sample_count: int | None = Field(default=1, ge=1, le=4)
@@ -182,7 +254,7 @@ def _public_discovery(result: DiscoveryResult, selected: str | None, key: str) -
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return {"ok": True, "service": "netzack-video-v2", "jobs_in_memory": len(jobs)}
+    return {"ok": True, "service": "netezack-videos-v2", "jobs_in_memory": len(jobs)}
 
 
 @app.get("/v1/effects")
@@ -227,15 +299,20 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
         raise _provider_error(exc) from exc
 
 
-async def _expand_prompt(provider: Any, provider_name: str, prompt: str) -> str:
+async def _expand_prompt(provider: Any, provider_name: str, prompt: str, duration_s: int = 8) -> str:
     """A IA transforma a ordem do usuário num roteiro visual rico (best effort)."""
     try:
         catalog = await provider.discover()
         model = choose_chat_model(provider_name, catalog.models)
+        if duration_s <= 60:
+            span = f"{duration_s} segundos"
+        else:
+            span = (f"{duration_s} segundos (~{duration_s // 60} min): divida em cenas curtas de ~8s "
+                    f"que mudam de plano, cor, movimento e luz para o vídeo não repetir")
         out = await provider.chat(model, [
             {"role": "system", "content": (
                 "Você é um diretor de cinema cyberpunk. Expanda a ordem do usuário num roteiro "
-                "visual de 8 segundos: ação, câmera, luz, cor e áudio. Responda em 1 parágrafo, "
+                f"visual de {span}: ação, câmera, luz, cor e áudio. Responda em 1 parágrafo, "
                 "em inglês, sem texto na tela.")},
             {"role": "user", "content": prompt},
         ], 0.7)
@@ -253,32 +330,50 @@ def _set(job_id: str, **fields: Any) -> None:
         setattr(job, k, v)
 
 
-def _publish_preview(job_id: str, frame_idx: int, total: int, frame) -> None:
-    """Grava o frame real como JPEG atômico — preview ao vivo, não simulado."""
-    from PIL import Image
+def _publish_preview(job_id: str, frame_idx: int, total: int, frame, write_jpeg: bool = True) -> None:
+    """Publica progresso real por quadro; grava JPEG atômico (throttled em vídeos longos)."""
+    fields: dict[str, Any] = {
+        "frames": frame_idx + 1,
+        "total_frames": total,
+        "progress": min(95, 55 + int(40 * (frame_idx + 1) / max(total, 1))),
+        "stage": f"renderizando quadro {frame_idx + 1}/{total}",
+        "preview_url": f"/v1/videos/{job_id}/preview",
+    }
+    if write_jpeg:
+        from PIL import Image
 
-    preview = MEDIA_DIR / f"preview_{job_id}.jpg"
-    tmp = MEDIA_DIR / f".preview_{job_id}.jpg.tmp"
-    Image.fromarray(frame).save(tmp, format="JPEG", quality=72)
-    os.replace(tmp, preview)
-    _set(
-        job_id,
-        frames=frame_idx + 1,
-        total_frames=total,
-        progress=min(95, 55 + int(40 * (frame_idx + 1) / max(total, 1))),
-        stage=f"renderizando quadro {frame_idx + 1}/{total}",
-        preview_url=f"/v1/videos/{job_id}/preview",
-    )
+        preview = MEDIA_DIR / f"preview_{job_id}.jpg"
+        tmp = MEDIA_DIR / f".preview_{job_id}.jpg.tmp"
+        Image.fromarray(frame).save(tmp, format="JPEG", quality=72)
+        os.replace(tmp, preview)
+    _set(job_id, **fields)
+
+
+def _on_frame_throttled(job_id: str):
+    """Preview JPEG ~96 atualizações por job; progresso a cada quadro."""
+    state = {"step": None}
+
+    def _cb(frame_idx: int, total: int, frame) -> None:
+        if state["step"] is None:
+            state["step"] = 1 if total <= 96 else max(1, total // 96)
+        write = (frame_idx % state["step"] == 0) or (frame_idx == total - 1)
+        _publish_preview(job_id, frame_idx, total, frame, write_jpeg=write)
+
+    return _cb
 
 
 async def _run_video_job(job_id: str, request: VideoRequest, key: str, provider_name: str, provider: Any) -> None:
     job = jobs[job_id]
     effects = parse_effects_from_prompt(request.prompt, request.effects)
+    duration = int(request.duration_seconds or 8)
+    rich_prompt = request.prompt
     _set(job_id, effects=effects, progress=5, stage="entendendo seu prompt")
     try:
-        if provider_name == "google":
+        # Veo remoto suporta até 8s — acima disso a IA roteiriza e renderiza local.
+        use_veo = provider_name == "google" and duration <= 8
+        if use_veo:
             _set(job_id, stage="expandindo roteiro com IA")
-            rich_prompt = await _expand_prompt(provider, provider_name, request.prompt)
+            rich_prompt = await _expand_prompt(provider, provider_name, request.prompt, duration)
             _set(job_id, progress=15, stage="consultando catálogo Veo")
             try:
                 catalog = await provider.discover()
@@ -312,20 +407,26 @@ async def _run_video_job(job_id: str, request: VideoRequest, key: str, provider_
                 _set(job_id, stage=f"Veo indisponível ({str(exc)[:90]}…). Gerando versão local com efeitos…",
                       progress=40, fallback_used=True)
         else:
-            # Qualquer outra API key em modo auto: IA roteiriza + render local com efeitos.
-            _set(job_id, stage="roteirizando com IA", progress=20)
-            rich_prompt = await _expand_prompt(provider, provider_name, request.prompt)
+            # Outra API ou duração >8s: IA roteiriza + render local com efeitos.
+            if provider_name == "google":
+                _set(job_id, stage=f"duração {duration}s > limite Veo (8s): roteirizando com IA p/ render local",
+                     progress=20)
+            else:
+                _set(job_id, stage="roteirizando com IA", progress=20)
+            rich_prompt = await _expand_prompt(provider, provider_name, request.prompt, duration)
             _set(job_id, fallback_used=True)
 
-        _set(job_id, progress=55, stage=f"renderizando com efeitos: {', '.join(effects[:3])}")
+        resolution = "1080p" if request.resolution == "4k" else (request.resolution or "720p")
+        if duration > 120 and resolution == "1080p":
+            resolution = "720p"  # vídeos longos: prioriza velocidade e tamanho
+        _set(job_id, progress=55,
+             stage=f"renderizando {duration}s em {resolution} com efeitos: {', '.join(effects[:3])}")
         target = MEDIA_DIR / f"{job_id}.mp4"
-        prompt_for_render = request.prompt if provider_name == "google" else rich_prompt
         final_effects = await asyncio.to_thread(
-            render_local_mp4, prompt_for_render,
-            effects, int(request.duration_seconds or 8),
-            "1080p" if request.resolution == "4k" else (request.resolution or "720p"),
+            render_local_mp4, rich_prompt,
+            effects, duration, resolution,
             request.aspect_ratio, target,
-            on_frame=lambda i, n, fr: _publish_preview(job_id, i, n, fr),
+            on_frame=_on_frame_throttled(job_id),
         )
         _set(job_id, status="completed", progress=100, stage="pronto",
               download_url=f"/v1/videos/{job_id}/download", effects=final_effects,
@@ -397,7 +498,7 @@ HTML = r"""<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Netzack Video V2</title>
+<title>⚡Netezack Vídeos V2 ⚡</title>
 <style>
 :root{color-scheme:dark;--bg:#04060b;--panel:#070b14;--line:#12203f;--neon:#00f5d4;--mag:#ff2e88;--txt:#dfe7f5;--mut:#7d8db0}
 *{box-sizing:border-box}
@@ -445,7 +546,7 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 .ok{color:var(--neon)}.err{color:var(--mag)}
 </style></head>
 <body><div class="wrap">
-<header><div class="logo">N</div><div><h1>NETZACK <em>VIDEO V2</em></h1><p class="sub">digite → a IA obedece → vídeo com preview real, quadro a quadro</p></div>
+<header><div class="logo">N</div><div><h1>⚡NETEZACK <em>VÍDEOS V2</em> ⚡</h1><p class="sub">digite → a IA obedece → vídeo com preview real, quadro a quadro</p></div>
 <span class="badge" id="provBadge">auto</span></header>
 
 <div class="card"><h2>// chave</h2>
@@ -470,7 +571,7 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 <div class="row">
 <select id="aspect" style="flex:1"><option value="16:9">16:9</option><option value="9:16">9:16</option></select>
 <select id="res" style="flex:1"><option value="720p">720p</option><option value="1080p">1080p</option></select>
-<select id="dur" style="flex:1"><option value="8">8s</option><option value="6">6s</option><option value="4">4s</option></select>
+<select id="dur" style="flex:1"><option value="8">8s</option><option value="15">15s</option><option value="30">30s</option><option value="60">1 min</option><option value="120">2 min</option><option value="300">5 min</option><option value="600">10 min</option></select>
 </div>
 <label>efeitos (<span id="fxCount">0</span>/5 — vazio = IA escolhe)</label>
 <div class="chips" id="fx"></div>
@@ -482,7 +583,7 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 <video id="player" controls playsinline></video>
 <div class="row"><a id="dl" style="display:none" href="#"><button class="ghost">BAIXAR MP4</button></a></div>
 </div></div>
-<footer>NETZACK VIDEO V2 · preview real (frames) · urls de API só no servidor</footer>
+<footer>⚡NETEZACK VÍDEOS V2⚡ · preview real (frames) · urls de API só no servidor</footer>
 </div><script>
 const $=id=>document.getElementById(id);
 let SEL=new Set();

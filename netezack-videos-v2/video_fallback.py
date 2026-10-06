@@ -12,6 +12,16 @@ from PIL import Image, ImageDraw, ImageFont
 from effects import parse_effects_from_prompt
 
 FPS = 12
+MAX_FRAMES = 7200
+
+
+def _fps_for(duration_s: int) -> int:
+    """FPS adaptativo: vídeos longos renderizam mais rápido sem perder fluidez."""
+    if duration_s <= 30:
+        return 12
+    if duration_s <= 180:
+        return 10
+    return 8
 
 
 def _resolution_size(resolution: str, aspect: str) -> tuple[int, int]:
@@ -167,16 +177,23 @@ def _apply_effects(frame: np.ndarray, effects: list[str], idx: int, t: float,
     return np.clip(f, 0, 255).astype(np.uint8)
 
 
-def _overlay_text(frame: np.ndarray, prompt: str, effects: list[str], idx: int, total: int) -> np.ndarray:
+_FONT_CACHE: dict[int, object] = {}
+
+
+def _get_font(w: int):
+    if w not in _FONT_CACHE:
+        try:
+            _FONT_CACHE[w] = ImageFont.load_default(size=max(14, w // 34))
+        except TypeError:
+            _FONT_CACHE[w] = ImageFont.load_default()
+    return _FONT_CACHE[w]
+
+
+def _overlay_text(frame: np.ndarray, lines: list[str], effects: list[str],
+                  idx: int, total: int, font) -> np.ndarray:
     img = Image.fromarray(frame)
     d = ImageDraw.Draw(img, "RGBA")
     w, h = img.size
-    try:
-        font = ImageFont.load_default(size=max(14, w // 34))
-    except TypeError:
-        font = ImageFont.load_default()
-    short = " ".join(prompt.split())[:160]
-    lines = textwrap.wrap(short, width=42)[:3]
     # Barra de progresso cyberpunk.
     bar_w = int(w * 0.86)
     d.rounded_rectangle([w * 0.07, h - 26, w * 0.07 + bar_w, h - 14], 6, fill=(0, 0, 0, 150))
@@ -188,7 +205,7 @@ def _overlay_text(frame: np.ndarray, prompt: str, effects: list[str], idx: int, 
         for i, ln in enumerate(lines):
             d.text((18, y0 + i * 20), ln, font=font, fill=(230, 255, 252, 255))
     tag = " + ".join(effects[:3])
-    d.text((12, 10), f"NETZACK V2 // {tag}", font=font, fill=(0, 245, 212, 255))
+    d.text((12, 10), f"NETEZACK V2 // {tag}", font=font, fill=(0, 245, 212, 255))
     d.text((12, 30), f"frame {idx + 1}/{total}", font=font, fill=(255, 46, 136, 255))
     return np.asarray(img)
 
@@ -204,20 +221,26 @@ def render_local_mp4(prompt: str, effects: list[str] | None, duration_s: int,
     import imageio.v2 as imageio  # import tardio p/ cold start menor
     final_effects = parse_effects_from_prompt(prompt, effects)
     w, h = _resolution_size(resolution, aspect)
-    n_frames = max(12, min(144, int(duration_s * FPS)))
+    fps = _fps_for(int(duration_s))
+    n_frames = max(12, min(MAX_FRAMES, int(duration_s) * fps))
+    font = _get_font(w)
+    short = " ".join(prompt.split())[:160]
+    lines = textwrap.wrap(short, width=42)[:3]
     rng = random.Random(seed)
     drops = [(rng.random(), rng.random(), rng.uniform(0.25, 0.9),
               rng.choice([(0, 255, 238), (255, 45, 150), (120, 255, 120), (255, 220, 120)]),
               rng.randint(4, 16)) for _ in range(46)]
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    writer = imageio.get_writer(str(out_path), fps=FPS, codec="libx264", quality=8,
-                                macro_block_size=None)
+    writer = imageio.get_writer(str(out_path), fps=fps, codec="libx264",
+                                quality=8 if n_frames <= 600 else 6,
+                                macro_block_size=None, pixelformat="yuv420p",
+                                output_params=["-preset", "veryfast"])
     try:
         for i in range(n_frames):
-            t = i / FPS
+            t = i / fps
             frame = _base_frame(w, h, t, rng)
             frame = _apply_effects(frame, final_effects, i, t, rng, drops)
-            frame = _overlay_text(frame, prompt, final_effects, i, n_frames)
+            frame = _overlay_text(frame, lines, final_effects, i, n_frames, font)
             writer.append_data(frame)
             if on_frame:
                 try:

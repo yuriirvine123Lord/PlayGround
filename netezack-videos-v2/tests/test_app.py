@@ -89,7 +89,7 @@ def test_health_and_ui(client):
     ui = client.get("/")
     assert ui.status_code == 200
     assert "Copiar resposta" in ui.text
-    assert "netzack" in ui.text.lower()
+    assert "netezack" in ui.text.lower()
     assert "identificar" in ui.text.lower()
 
 
@@ -152,3 +152,21 @@ def test_openapi_contains_core_routes(client):
     assert "/v1/discover" in schema["paths"]
     assert "/v1/chat" in schema["paths"]
     assert "/v1/videos" in schema["paths"]
+
+
+def test_duration_allows_up_to_10_minutes():
+    import pydantic
+
+    from app import VideoRequest
+
+    assert VideoRequest(prompt="cena neon", duration_seconds=600).duration_seconds == 600
+    assert VideoRequest(prompt="cena neon").duration_seconds == 8
+    for bad in (601, 1, 0):
+        with pytest.raises(pydantic.ValidationError):
+            VideoRequest(prompt="cena neon", duration_seconds=bad)
+
+
+def test_ui_offers_10_minutes(client):
+    ui = client.get("/")
+    assert 'value="600"' in ui.text
+    assert "10 min" in ui.text
