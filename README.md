@@ -28,3 +28,17 @@ geração de vídeo estilo Veo 3 com 11 efeitos especiais.
 - Download via GitHub: Actions → `Netzack Videos — Android APK` → Artifacts
 - Backend: `server/` — `uvicorn app:app --host 0.0.0.0 --port 8000`
 - Docs: `android/README.md`
+
+## 🚀 Lançamentos
+
+Baixe o aplicativo **Netzack Videos** pronto para instalar no Android:
+
+| Versão | Arquivo | Download |
+|--------|---------|----------|
+| v1.0.0 | `Netzack-Videos-v1.0.0-debug.apk` (6,1 MB) | [Download direto (release)](https://github.com/yuriirvine123Lord/PlayGround/releases/download/v1.0.0/Netzack-Videos-v1.0.0-debug.apk) · [Ver todos os lançamentos](https://github.com/yuriirvine123Lord/PlayGround/releases) |
+
+**Como instalar:**
+1. Baixe o APK no celular pelo link acima.
+2. Abra o arquivo e permita "instalar apps desconhecidos" quando o Android pedir.
+3. Abra o **Netzack Videos**, informe o servidor (ex: `http://SEU_IP:8000`) e sua chave API — o app detecta a IA sozinho (`AIza…` → Google/Veo, `sk-ant-…` → Anthropic, `sk-…` → OpenAI).
+4. Use o chat para roteiros e a aba de vídeo (+ 11 efeitos especiais estilo Veo 3) para gerar e assistir.
