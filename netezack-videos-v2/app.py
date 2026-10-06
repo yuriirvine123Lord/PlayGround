@@ -28,6 +28,7 @@ from providers import (
 )
 from video_fallback import render_local_mp4
 from ai_video import render_ai_mp4, AI_MIN_DURATION, AI_MAX_DURATION
+from engines import ENGINE_ORDER, ORCHESTRATOR_URL, try_orchestrator, engines_status
 
 load_dotenv()
 
@@ -184,6 +185,7 @@ class JobState(BaseModel):
     stage: str | None = None
     effects: list[str] | None = None
     fallback_used: bool = False
+    engine: str | None = None
     preview_url: str | None = None
     frames: int | None = None
     total_frames: int | None = None
@@ -263,6 +265,12 @@ async def health() -> dict[str, Any]:
 async def effects() -> dict[str, Any]:
     items = list_effects()
     return {"count": len(items), "effects": items}
+
+
+@app.get("/v1/engines")
+async def engines() -> dict[str, Any]:
+    """Cascata de motores de vídeo: orquestrador → veo → flux → local."""
+    return engines_status()
 
 
 @app.post("/v1/discover")
@@ -377,10 +385,28 @@ async def _run_video_job(job_id: str, request: VideoRequest, key: str, provider_
     effects = parse_effects_from_prompt(request.prompt, request.effects)
     duration = int(request.duration_seconds or 8)
     rich_prompt = request.prompt
-    _set(job_id, effects=effects, progress=5, stage="entendendo seu prompt")
+    resolution = "1080p" if request.resolution == "4k" else (request.resolution or "720p")
+    if duration > 120 and resolution == "1080p":
+        resolution = "720p"  # vídeos longos: prioriza velocidade e tamanho
+    target = MEDIA_DIR / f"{job_id}.mp4"
+    _set(job_id, effects=effects, progress=5, stage="entendendo seu prompt", status="generating")
     try:
-        # Veo remoto suporta até 8s — acima disso a IA roteiriza e renderiza local.
-        use_veo = provider_name == "google" and duration <= 8
+        # --- Motor 1: orquestrador próprio (Veo3 etc), se configurado ---
+        if "orchestrator" in ENGINE_ORDER and ORCHESTRATOR_URL:
+            _set(job_id, progress=12, stage="motor orquestrador próprio (Veo3)…")
+            ok = await asyncio.to_thread(
+                try_orchestrator, request.prompt, duration, request.aspect_ratio, resolution, target)
+            if ok:
+                _set(job_id, status="completed", progress=100, engine="orchestrator",
+                     stage="pronto (orquestrador)", download_url=f"/v1/videos/{job_id}/download",
+                     fallback_used=False)
+                job.status = "completed"
+                job.download_url = f"/v1/videos/{job_id}/download"
+                return
+            _set(job_id, progress=15, stage="orquestrador indisponível → próximo motor…")
+
+        # --- Motor 2: Veo remoto (google, até 8s) ---
+        use_veo = "veo" in ENGINE_ORDER and provider_name == "google" and duration <= 8
         if use_veo:
             _set(job_id, stage="expandindo roteiro com IA")
             rich_prompt = await _expand_prompt(provider, provider_name, request.prompt, duration)
@@ -400,57 +426,59 @@ async def _run_video_job(job_id: str, request: VideoRequest, key: str, provider_
                 def _prog(pct: int) -> None:
                     _set(job_id, progress=min(95, 25 + int(pct * 0.7)), stage="Veo remoto renderizando…")
 
-                target = MEDIA_DIR / f"{job_id}.mp4"
                 await provider.wait_and_download(
                     operation_name, target,
                     poll_interval=POLL_INTERVAL, timeout_seconds=JOB_TIMEOUT,
                     on_progress=_prog,
                 )
-                _set(job_id, status="completed", progress=100,
-                      stage="pronto", download_url=f"/v1/videos/{job_id}/download")
+                _set(job_id, status="completed", progress=100, engine="veo",
+                     stage="pronto (veo)", download_url=f"/v1/videos/{job_id}/download")
                 job.status = "completed"
                 job.download_url = f"/v1/videos/{job_id}/download"
                 return
             except ProviderError as exc:
                 if not request.use_fallback:
                     raise
-                _set(job_id, stage=f"Veo indisponível ({str(exc)[:90]}…). Gerando versão local com efeitos…",
-                      progress=40, fallback_used=True)
+                _set(job_id, stage=f"Veo indisponível ({str(exc)[:90]}…). Próximo motor…",
+                     progress=40, fallback_used=True)
         else:
-            # Outra API ou duração >8s: IA roteiriza + render local com efeitos.
+            # Outra API ou duração >8s: IA roteiriza o prompt pros motores locais.
             if provider_name == "google":
-                _set(job_id, stage=f"duração {duration}s > limite Veo (8s): roteirizando com IA p/ render local",
+                _set(job_id, stage=f"duração {duration}s > limite Veo (8s): roteirizando com IA",
                      progress=20)
             else:
                 _set(job_id, stage="roteirizando com IA", progress=20)
             rich_prompt = await _expand_prompt(provider, provider_name, request.prompt, duration)
             _set(job_id, fallback_used=True)
 
-        resolution = "1080p" if request.resolution == "4k" else (request.resolution or "720p")
-        if duration > 120 and resolution == "1080p":
-            resolution = "720p"  # vídeos longos: prioriza velocidade e tamanho
-        target = MEDIA_DIR / f"{job_id}.mp4"
         final_effects = None
-        # Vídeos de 4s..60s: primeiro tenta quadros de IA open-source (FLUX).
-        if AI_MIN_DURATION <= duration <= AI_MAX_DURATION:
-            _set(job_id, progress=60, stage="IA gerando quadros (FLUX open-source)…")
+        # --- Motor 3: IA open-source FLUX (quadros) em vídeos de 4s..60s ---
+        if "flux" in ENGINE_ORDER and AI_MIN_DURATION <= duration <= AI_MAX_DURATION:
+            _set(job_id, progress=60, stage="motor IA FLUX (open-source) gerando quadros…")
             final_effects = await asyncio.to_thread(
                 render_ai_mp4, rich_prompt, effects, duration, resolution,
                 request.aspect_ratio, target, seed=7,
                 on_frame=_on_frame_throttled(job_id),
             )
-        if final_effects is None:
+            if final_effects is not None:
+                job.engine = "flux"
+        # --- Motor 4: render local procedural (sempre disponível) ---
+        if final_effects is None and "local" in ENGINE_ORDER:
             _set(job_id, progress=55,
-                 stage=f"renderizando {duration}s em {resolution} com efeitos: {', '.join(effects[:3])}")
+                 stage=f"motor local: renderizando {duration}s em {resolution} com efeitos: {', '.join(effects[:3])}")
             final_effects = await asyncio.to_thread(
                 render_local_mp4, rich_prompt,
                 effects, duration, resolution,
                 request.aspect_ratio, target,
                 on_frame=_on_frame_throttled(job_id),
             )
-        _set(job_id, status="completed", progress=100, stage="pronto",
+            job.engine = "local"
+        if final_effects is None:
+            raise ProviderError(
+                f"Nenhum motor de vídeo disponível na cascata: {', '.join(ENGINE_ORDER)}.", 503)
+        _set(job_id, status="completed", progress=100, stage=f"pronto ({job.engine})",
               download_url=f"/v1/videos/{job_id}/download", effects=final_effects,
-              fallback_used=(job.fallback_used or provider_name != "google"))
+              fallback_used=(job.engine in ("flux", "local")))
         job.status = "completed"
         job.download_url = f"/v1/videos/{job_id}/download"
     except ProviderError as exc:
@@ -610,6 +638,7 @@ footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
 <footer>⚡NETEZACK VÍDEOS V2⚡ · preview real (frames) · urls de API só no servidor</footer>
 </div><script>
 const $=id=>document.getElementById(id);
+fetch('/v1/engines').then(r=>r.json()).then(j=>{const f=document.querySelector('footer');f.textContent='⚡NETEZACK VÍDEOS V2⚡ · motores: '+j.order.join(' → ')}).catch(()=>{});
 let SEL=new Set();
 const creds=()=>({api_key:$('key').value||null,provider:$('provider').value,base_url:$('base').value||null});
 async function call(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||('Erro HTTP '+r.status));return j}
@@ -621,7 +650,7 @@ $('discover').onclick=async()=>{const b=$('discover');b.disabled=true;$('discove
 $('chat').onclick=async()=>{const t=$('chatPrompt').value.trim();if(!t)return;bubble('user',t);const b=$('chat');b.disabled=true;try{const j=await call('/v1/chat',{...creds(),messages:[{role:'user',content:t}]});$('chatOut').textContent=j.text;$('chatOut').style.display='block';bubble('ai',j.text.slice(0,900))}catch(e){bubble('ai','erro: '+e.message)}finally{b.disabled=false}};
 $('copyChat').onclick=async()=>{await navigator.clipboard.writeText($('chatOut').textContent||'');$('copyChat').textContent='Copiado ✓';setTimeout(()=>$('copyChat').textContent='Copiar resposta',1200)};
 $('sendToVideo').onclick=()=>{$('videoPrompt').value=$('chatOut').textContent||$('chatPrompt').value};
-$('video').onclick=async()=>{const b=$('video');b.disabled=true;$('player').style.display='none';$('dl').style.display='none';$('previewBox').style.display='none';$('videoOut').textContent='enfileirando…';try{const body={...creds(),prompt:$('videoPrompt').value,aspect_ratio:$('aspect').value,resolution:$('res').value,duration_seconds:parseInt($('dur').value,10),effects:[...SEL]};if(!body.prompt.trim())throw new Error('descreva o vídeo primeiro.');const j=await call('/v1/videos',body);let s=j;$('videoOut').textContent='job '+j.job_id+' · '+j.provider+' · efeitos: '+(j.effects||[]).join(', ');while(s.status==='queued'||s.status==='generating'){await new Promise(r=>setTimeout(r,1200));const r=await fetch('/v1/videos/'+j.job_id);s=await r.json();$('bar').style.width=(s.progress||0)+'%';$('stage').textContent=(s.stage||s.status)+'  ['+(s.progress||0)+'%]  '+(s.frames?(s.frames+'/'+s.total_frames+' quadros'):'');if(s.preview_url){$('previewBox').style.display='block';$('previewImg').src=location.origin+s.preview_url+'?t='+Date.now()}$('videoOut').textContent='job '+j.job_id+'\n'+(s.stage||s.status)+' ['+(s.progress||0)+'%]'+(s.frames?'\nframes: '+s.frames+'/'+s.total_frames:'')+'\nefeitos: '+(s.effects||[]).join(', ')+(s.fallback_used?'\nmodo: IA open-source + efeitos (fallback local)':'\nmodo: veo')}$('bar').style.width='100%';if(s.status==='completed'&&s.download_url){const url=location.origin+s.download_url;$('player').src=url;$('player').style.display='block';$('dl').href=url;$('dl').style.display='inline';$('stage').textContent='concluído — vídeo pronto';$('videoOut').textContent+='\n\nPRONTO: '+url}else{$('stage').textContent='falhou';$('videoOut').textContent+='\n\nfalhou: '+(s.error||'desconhecido')}}catch(e){$('stage').textContent='erro';$('videoOut').textContent='erro: '+e.message}finally{b.disabled=false}};
+$('video').onclick=async()=>{const b=$('video');b.disabled=true;$('player').style.display='none';$('dl').style.display='none';$('previewBox').style.display='none';$('videoOut').textContent='enfileirando…';try{const body={...creds(),prompt:$('videoPrompt').value,aspect_ratio:$('aspect').value,resolution:$('res').value,duration_seconds:parseInt($('dur').value,10),effects:[...SEL]};if(!body.prompt.trim())throw new Error('descreva o vídeo primeiro.');const j=await call('/v1/videos',body);let s=j;$('videoOut').textContent='job '+j.job_id+' · '+j.provider+' · efeitos: '+(j.effects||[]).join(', ');while(s.status==='queued'||s.status==='generating'){await new Promise(r=>setTimeout(r,1200));const r=await fetch('/v1/videos/'+j.job_id);s=await r.json();$('bar').style.width=(s.progress||0)+'%';$('stage').textContent=(s.stage||s.status)+'  ['+(s.progress||0)+'%]  '+(s.frames?(s.frames+'/'+s.total_frames+' quadros'):'');if(s.preview_url){$('previewBox').style.display='block';$('previewImg').src=location.origin+s.preview_url+'?t='+Date.now()}$('videoOut').textContent='job '+j.job_id+'\n'+(s.stage||s.status)+' ['+(s.progress||0)+'%]'+(s.frames?'\nframes: '+s.frames+'/'+s.total_frames:'')+'\nefeitos: '+(s.effects||[]).join(', ')+(s.engine?'\nmotor: '+s.engine:'')+(s.fallback_used?'\nmodo: IA open-source + efeitos (fallback local)':'\nmodo: veo')}$('bar').style.width='100%';if(s.status==='completed'&&s.download_url){const url=location.origin+s.download_url;$('player').src=url;$('player').style.display='block';$('dl').href=url;$('dl').style.display='inline';$('stage').textContent='concluído — vídeo pronto';$('videoOut').textContent+='\n\nPRONTO: '+url}else{$('stage').textContent='falhou';$('videoOut').textContent+='\n\nfalhou: '+(s.error||'desconhecido')}}catch(e){$('stage').textContent='erro';$('videoOut').textContent='erro: '+e.message}finally{b.disabled=false}};
 </script></body></html>"""
 
 

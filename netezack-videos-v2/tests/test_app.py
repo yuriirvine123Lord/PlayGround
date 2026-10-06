@@ -230,3 +230,53 @@ def test_ui_offers_10_minutes(client):
     ui = client.get("/")
     assert 'value="600"' in ui.text
     assert "10 min" in ui.text
+
+
+def test_engines_endpoint_shows_cascade(client):
+    r = client.get("/v1/engines")
+    assert r.status_code == 200
+    body = r.json()
+    assert "local" in body["order"] and "flux" in body["order"]
+    assert body["local"]["always"] is True
+
+
+def test_orchestrator_accepts_json_base64_and_fails_safe(monkeypatch, tmp_path):
+    import base64 as b64mod
+    import json as jsonmod
+
+    import engines
+
+    fake_mp4 = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 2048
+
+    class FakeResp:
+        headers = {"content-type": "application/json"}
+
+        def __init__(self, payload):
+            self._p = payload
+
+        def read(self, *a):
+            return self._p
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    monkeypatch.setattr(engines, "ORCHESTRATOR_URL", "http://orchestrator.local/v1/generate")
+    monkeypatch.setattr(engines, "ORCHESTRATOR_API_KEY", "token")
+    monkeypatch.setattr(engines.urllib.request, "urlopen",
+                        lambda req, timeout=None: FakeResp(
+                            jsonmod.dumps({"video_base64": b64mod.b64encode(fake_mp4).decode()}).encode()))
+    target = tmp_path / "out.mp4"
+    assert engines.try_orchestrator("prompt", 8, "16:9", "720p", target) is True
+    assert target.read_bytes() == fake_mp4
+
+    def boom(*a, **k):
+        raise OSError("orchestrador caiu")
+
+    monkeypatch.setattr(engines.urllib.request, "urlopen", boom)
+    assert engines.try_orchestrator("prompt", 8, "16:9", "720p", tmp_path / "x.mp4") is False
+
+    monkeypatch.setattr(engines, "ORCHESTRATOR_URL", "")
+    assert engines.try_orchestrator("prompt", 8, "16:9", "720p", tmp_path / "y.mp4") is False
