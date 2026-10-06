@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⚡Netezack Vídeos V2 ⚡</title>
+<style>
+:root{color-scheme:dark;--bg:#04060b;--panel:#070b14;--line:#12203f;--neon:#00f5d4;--mag:#ff2e88;--txt:#dfe7f5;--mut:#7d8db0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 14px 60px}
+header{display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:14px}
+.logo{width:40px;height:40px;border:1px solid var(--neon);border-radius:9px;display:grid;place-items:center;color:var(--neon);font-weight:800;box-shadow:0 0 14px #00f5d444}
+h1{margin:0;font-size:19px;letter-spacing:2px;font-weight:700}
+h1 em{font-style:normal;color:var(--neon)}
+.sub{margin:2px 0 0;color:var(--mut);font-size:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:14px}
+h2{margin:0 0 8px;font-size:13px;letter-spacing:1.5px;color:var(--neon);text-transform:uppercase}
+label{display:block;margin:10px 0 5px;font-size:11.5px;color:var(--mut);letter-spacing:.5px}
+input,textarea,select{width:100%;border:1px solid var(--line);background:#04070e;color:var(--txt);border-radius:7px;padding:10px;font:inherit}
+input:focus,textarea:focus{outline:none;border-color:var(--neon);box-shadow:0 0 0 1px #00f5d455}
+textarea{min-height:86px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{border:1px solid var(--neon);background:transparent;color:var(--neon);border-radius:7px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer;letter-spacing:.5px}
+button:hover{background:#00f5d415}
+button.mag{border-color:var(--mag);color:var(--mag)}
+button.mag:hover{background:#ff2e8818}
+button.ghost{border-color:var(--line);color:var(--mut)}
+button:disabled{opacity:.45;cursor:wait}
+.badge{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:99px;color:var(--mut)}
+.badge.on{border-color:var(--neon);color:var(--neon)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;max-height:118px;overflow:auto}
+.chip{font-size:11px;padding:5px 9px;border:1px solid var(--line);border-radius:99px;color:var(--mut);cursor:pointer;user-select:none}
+.chip.on{border-color:var(--mag);color:var(--mag);background:#ff2e8814}
+.chat{display:flex;flex-direction:column;gap:8px;margin-top:10px;max-height:250px;overflow:auto}
+.msg{padding:9px 11px;border-radius:8px;font-size:12.5px;white-space:pre-wrap;line-height:1.45}
+.msg.user{background:#0b1226;border:1px solid #1b2c55;align-self:flex-end;max-width:92%}
+.msg.ai{background:#060a12;border:1px solid var(--line);align-self:flex-start;max-width:97%}
+pre{white-space:pre-wrap;word-break:break-word;background:#03050a;border:1px solid var(--line);border-radius:7px;padding:11px;min-height:44px;overflow:auto;font-size:11.5px;margin:10px 0 0;color:var(--mut)}
+.progress{height:8px;background:#0a1120;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-top:12px}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--neon),var(--mag));transition:width .35s}
+#stage{font-size:11.5px;color:var(--neon);margin-top:7px;min-height:16px}
+#previewBox{display:none;margin-top:10px;position:relative}
+#previewBox img{width:100%;border:1px solid var(--neon);border-radius:8px;display:block;box-shadow:0 0 22px #00f5d422}
+#previewTag{position:absolute;top:8px;left:8px;background:#04060bcc;border:1px solid var(--mag);color:var(--mag);font-size:10.5px;padding:3px 8px;border-radius:5px;letter-spacing:1px}
+video{width:100%;border:1px solid var(--neon);border-radius:8px;background:#000;margin-top:10px;display:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+details{margin-top:10px;font-size:11.5px;color:var(--mut)}summary{cursor:pointer}
+footer{color:var(--mut);font-size:11px;margin-top:16px;text-align:center}
+.ok{color:var(--neon)}.err{color:var(--mag)}
+</style></head>
+<body><div class="wrap">
+<header><div class="logo">N</div><div><h1>⚡NETEZACK <em>VÍDEOS V2</em> ⚡</h1><p class="sub">digite → a IA obedece → vídeo com preview real, quadro a quadro</p></div>
+<span class="badge" id="provBadge">auto</span></header>
+
+<div class="card"><h2>// chave</h2>
+<label>API KEY — cole qualquer chave, o servidor identifica sozinho (URLs ficam no servidor)</label>
+<div class="row" style="margin-top:5px"><input id="key" type="password" placeholder="AIza… / sk-… / sk-ant-… / gsk_… / hf_… / r8_… / xai-… / sk-or-… / pplx-… / csk-…" autocomplete="off" style="flex:2">
+<button id="discover">IDENTIFICAR</button><button id="clearKey" class="ghost">limpar</button></div>
+<pre id="discovery">status: aguardando chave</pre>
+<details><summary>provedor (opcional — auto já detecta tudo)</summary>
+<label>provedor</label><select id="provider"><option value="auto">auto detectar (todas IAs)</option><option value="google">google / gemini / veo</option><option value="openai">openai</option><option value="anthropic">anthropic</option><option value="deepseek">deepseek</option><option value="groq">groq</option><option value="together">together</option><option value="fireworks">fireworks</option><option value="mistral">mistral</option><option value="openrouter">openrouter</option><option value="xai">xAI</option><option value="perplexity">perplexity</option><option value="cohere">cohere</option><option value="huggingface">huggingface</option><option value="replicate">replicate</option><option value="stability">stability</option><option value="cerebras">cerebras</option><option value="deepinfra">deepinfra</option><option value="sambanova">sambanova</option><option value="nvidia">nvidia</option><option value="moonshot">moonshot/kimi</option><option value="zhipu">zhipu/glm</option><option value="minimax">minimax</option><option value="alibaba">alibaba/qwen</option><option value="nebius">nebius</option><option value="openai_compatible">openai compatível (auto)</option></select></details>
+</div>
+
+<div class="grid2">
+<div class="card"><h2>// chat ia</h2>
+<div class="chat" id="chatBox"><div class="msg ai">NEON online. fala o que você quer criar.</div></div>
+<label>sua ordem</label><textarea id="chatPrompt" placeholder="crie um roteiro de 8s de rua neon chuvosa…"></textarea>
+<div class="row"><button id="chat">ENVIAR</button><button id="copyChat" class="ghost">Copiar resposta</button><button id="sendToVideo" class="ghost">usar no vídeo</button></div>
+<pre id="chatOut" style="display:none"></pre></div>
+
+<div class="card"><h2>// gerar vídeo</h2>
+<label>prompt do vídeo</label><textarea id="videoPrompt" placeholder="rua neon chuvosa à noite, dolly lento, glitch + chuva, sem texto…"></textarea>
+<div class="row">
+<select id="aspect" style="flex:1"><option value="16:9">16:9</option><option value="9:16">9:16</option></select>
+<select id="res" style="flex:1"><option value="720p">720p</option><option value="1080p">1080p</option></select>
+<select id="dur" style="flex:1"><option value="8">8s</option><option value="15">15s</option><option value="30">30s</option><option value="60">1 min</option><option value="120">2 min</option><option value="300">5 min</option><option value="600">10 min</option></select>
+</div>
+<label>efeitos (<span id="fxCount">0</span>/40 — vazio = IA escolhe, pode marcar TODOS)</label>
+<div class="row" style="margin-top:6px"><button id="fxAll" class="ghost" type="button">MARCAR TODOS (40)</button><button id="fxNone" class="ghost" type="button">LIMPAR</button></div>
+<div class="chips" id="fx"></div>
+<div class="row"><button id="video" class="mag">GERAR VÍDEO</button></div>
+<div class="progress"><i id="bar"></i></div>
+<div id="stage"></div>
+<div id="previewBox"><span id="previewTag">RENDER AO VIVO</span><img id="previewImg" alt="preview"></div>
+<pre id="videoOut">o job aparece aqui com progresso real</pre>
+<video id="player" controls playsinline></video>
+<div class="row"><a id="dl" style="display:none" href="#"><button class="ghost">BAIXAR MP4</button></a></div>
+</div></div>
+<footer>⚡NETEZACK VÍDEOS V2⚡ · preview real (frames) · urls de API só no servidor</footer>
+</div><script>
+const $=id=>document.getElementById(id);
+let SEL=new Set();
+const creds=()=>({api_key:$('key').value||null,provider:$('provider').value});
+async function call(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||('Erro HTTP '+r.status));return j}
+function bubble(who,text){const d=document.createElement('div');d.className='msg '+(who==='user'?'user':'ai');d.textContent=text;$('chatBox').appendChild(d);$('chatBox').scrollTop=1e6}
+async function loadFx(){try{const j=await (await fetch('/v1/effects')).json();const box=$('fx');box.innerHTML='';(j.effects||[]).forEach(f=>{const s=document.createElement('span');s.className='chip';s.textContent=f.label;s.title=f.id+' — '+f.desc;s.onclick=()=>{SEL.has(f.id)?SEL.delete(f.id):(SEL.size<40&&SEL.add(f.id));s.classList.toggle('on');$('fxCount').textContent=SEL.size};box.appendChild(s)})}catch(e){$('fx').textContent='erro ao carregar efeitos'}}
+loadFx();
+$('fxAll').onclick=async()=>{try{const j=await (await fetch('/v1/effects')).json();SEL=new Set((j.effects||[]).map(f=>f.id));document.querySelectorAll('#fx .chip').forEach(c=>c.classList.add('on'));$('fxCount').textContent=SEL.size}catch(e){}};
+$('fxNone').onclick=()=>{SEL.clear();document.querySelectorAll('#fx .chip').forEach(c=>c.classList.remove('on'));$('fxCount').textContent='0'};
+$('clearKey').onclick=()=>{$('key').value='';$('provBadge').textContent='auto';$('provBadge').classList.remove('on')};
+$('discover').onclick=async()=>{const b=$('discover');b.disabled=true;$('discovery').textContent='identificando…';try{const j=await call('/v1/discover',creds());$('provBadge').textContent=j.provider+' · '+j.key_hint;$('provBadge').classList.add('on');$('discovery').textContent='provedor: '+j.provider+' ('+j.key_hint+')\nmodelo: '+j.selected_model+'\ncapacidades: '+JSON.stringify(j.capabilities)+'\nmodelos: '+(j.models||[]).slice(0,25).join(', ')}catch(e){$('discovery').textContent='erro: '+e.message}finally{b.disabled=false}};
+$('chat').onclick=async()=>{const t=$('chatPrompt').value.trim();if(!t)return;bubble('user',t);const b=$('chat');b.disabled=true;try{const j=await call('/v1/chat',{...creds(),messages:[{role:'user',content:t}]});$('chatOut').textContent=j.text;$('chatOut').style.display='block';bubble('ai',j.text.slice(0,900))}catch(e){bubble('ai','erro: '+e.message)}finally{b.disabled=false}};
+$('copyChat').onclick=async()=>{await navigator.clipboard.writeText($('chatOut').textContent||'');$('copyChat').textContent='Copiado ✓';setTimeout(()=>$('copyChat').textContent='Copiar resposta',1200)};
+$('sendToVideo').onclick=()=>{$('videoPrompt').value=$('chatOut').textContent||$('chatPrompt').value};
+$('video').onclick=async()=>{const b=$('video');b.disabled=true;$('player').style.display='none';$('dl').style.display='none';$('previewBox').style.display='none';$('videoOut').textContent='enfileirando…';try{const body={...creds(),prompt:$('videoPrompt').value,aspect_ratio:$('aspect').value,resolution:$('res').value,duration_seconds:parseInt($('dur').value,10),effects:[...SEL]};if(!body.prompt.trim())throw new Error('descreva o vídeo primeiro.');const j=await call('/v1/videos',body);let s=j;$('videoOut').textContent='job '+j.job_id+' · '+j.provider+' · efeitos: '+(j.effects||[]).join(', ');while(s.status==='queued'||s.status==='generating'){await new Promise(r=>setTimeout(r,1200));const r=await fetch('/v1/videos/'+j.job_id);s=await r.json();$('bar').style.width=(s.progress||0)+'%';$('stage').textContent=(s.stage||s.status)+'  ['+(s.progress||0)+'%]  '+(s.frames?(s.frames+'/'+s.total_frames+' quadros'):'');if(s.preview_url){$('previewBox').style.display='block';$('previewImg').src=location.origin+s.preview_url+'?t='+Date.now()}$('videoOut').textContent='job '+j.job_id+'\n'+(s.stage||s.status)+' ['+(s.progress||0)+'%]'+(s.frames?'\nframes: '+s.frames+'/'+s.total_frames:'')+'\nefeitos: '+(s.effects||[]).join(', ')+(s.fallback_used?'\nmodo: IA open-source + efeitos (fallback local)':'\nmodo: veo')}$('bar').style.width='100%';if(s.status==='completed'&&s.download_url){const url=location.origin+s.download_url;$('player').src=url;$('player').style.display='block';$('dl').href=url;$('dl').style.display='inline';$('stage').textContent='concluído — vídeo pronto';$('videoOut').textContent+='\n\nPRONTO: '+url}else{$('stage').textContent='falhou';$('videoOut').textContent+='\n\nfalhou: '+(s.error||'desconhecido')}}catch(e){$('stage').textContent='erro';$('videoOut').textContent='erro: '+e.message}finally{b.disabled=false}};
+</script></body></html>
