@@ -99,17 +99,39 @@ def _palette(effect: str, t: float):
     return palettes.get(effect, ((0, 255, 220), (10, 10, 30)))
 
 
+QUALITY_SIZES = {
+    # paisagem (16:9) e vertical (9:16) — 100% open-source
+    "360p": ((640, 360), (360, 640)),
+    "480p": ((854, 480), (480, 854)),
+    "720p": ((1280, 720), (720, 1280)),
+    "1080p": ((1920, 1080), (1080, 1920)),
+}
+
+QUALITY_IDS = list(QUALITY_SIZES.keys())
+
+
 def render_effect_video(prompt: str, effect: str, destination: Path,
                         duration_seconds: int = 8, aspect_ratio: str = "16:9",
-                        fps: int = 12) -> Path:
-    """Renderiza MP4 animado. Sempre funciona offline (fallback garantido)."""
+                        fps: int = 12, quality: str = "360p") -> Path:
+    """Renderiza MP4 animado. Sempre funciona offline (fallback garantido).
+
+    duration: 2..600s (até 10 min). quality: 360p/480p/720p/1080p.
+    Vídeos longos usam fps reduzido para caber no Railway.
+    """
     import numpy as np
-    from PIL import Image, ImageDraw, ImageFont
+    from PIL import Image, ImageDraw
     import imageio.v2 as imageio
 
     effect = effect if effect in EFFECTS else "neon_pulse"
-    duration_seconds = max(2, min(12, int(duration_seconds or 8)))
-    W, H = (640, 360) if aspect_ratio == "16:9" else (360, 640)
+    duration_seconds = max(2, min(600, int(duration_seconds or 8)))
+    quality = quality if quality in QUALITY_SIZES else "360p"
+    # vídeos longos: reduz fps para não estourar CPU/disco do Railway
+    if duration_seconds > 60:
+        fps = min(fps, 8)
+    if duration_seconds > 180:
+        fps = min(fps, 6)
+    sizes = QUALITY_SIZES[quality]
+    W, H = sizes[0] if aspect_ratio == "16:9" else sizes[1]
     n_frames = duration_seconds * fps
     c1, c2 = _palette(effect, 0.0)
 
@@ -176,9 +198,10 @@ def render_effect_video(prompt: str, effect: str, destination: Path,
 
         img = Image.fromarray(np.clip(frame, 0, 255).astype("uint8"))
         d = ImageDraw.Draw(img, "RGBA")
-        # barra + título cyberpunk
-        d.rectangle([0, H - 56, W, H], fill=(0, 0, 0, 170))
-        d.text((12, H - 46), EFFECTS[effect]["name"].upper(), fill=(0, 255, 220))
+        # barra + título cyberpunk (escala com a qualidade)
+        bar_h = max(56, H // 8)
+        d.rectangle([0, H - bar_h, W, H], fill=(0, 0, 0, 170))
+        d.text((12, H - bar_h + 10), EFFECTS[effect]["name"].upper(), fill=(0, 255, 220))
         # quebra o prompt em 2 linhas
         words, lines, cur = short.split(), [], ""
         for w in words:
@@ -188,10 +211,11 @@ def render_effect_video(prompt: str, effect: str, destination: Path,
                 cur = (cur + " " + w).strip()
         lines.append(cur)
         for li, line in enumerate(lines[:2]):
-            d.text((12, H - 28 + li * 13), line[:46], fill=(235, 240, 255))
-        # mira / HUD
+            d.text((12, H - bar_h + 28 + li * 14), line[:46], fill=(235, 240, 255))
+        # mira / HUD (tempo total ajuda em vídeos de até 10 min)
         d.ellipse([W - 44, 12, W - 12, 44], outline=(0, 255, 220), width=2)
-        d.text((14, 12), f"REC {t:04.1f}s", fill=(255, 80, 120))
+        mm, ss = divmod(t, 60)
+        d.text((14, 12), f"REC {int(mm):02d}:{ss:04.1f}", fill=(255, 80, 120))
         writer.append_data(np.asarray(img))
 
     writer.close()

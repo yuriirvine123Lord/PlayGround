@@ -62,10 +62,11 @@ class VideoRequest(Credentials):
     model: str | None = None
     aspect_ratio: Literal["16:9", "9:16"] = "16:9"
     resolution: Literal["720p", "1080p"] = "720p"
-    duration_seconds: int | None = Field(default=8, ge=2, le=12)
+    quality: Literal["360p", "480p", "720p", "1080p"] = "360p"
+    duration_seconds: int | None = Field(default=8, ge=2, le=600)
     generate_audio: bool | None = True
     negative_prompt: str | None = Field(default=None, max_length=5_000)
-    effect: str | None = Field(default="neon_pulse", description="Um dos 30 efeitos locais.")
+    effect: str | None = Field(default="neon_pulse", description="Um dos 36 efeitos locais.")
     use_cloud: bool = Field(default=True, description="Tenta nuvem primeiro; se falhar, cai no render local.")
     image_base64: str | None = None
     image_mime_type: str | None = "image/png"
@@ -91,7 +92,8 @@ class SmartRequest(Credentials):
     message: str = Field(min_length=1, max_length=20_000)
     effect: str | None = "neon_pulse"
     aspect_ratio: Literal["16:9", "9:16"] = "16:9"
-    duration_seconds: int | None = Field(default=8, ge=2, le=12)
+    quality: Literal["360p", "480p", "720p", "1080p"] = "360p"
+    duration_seconds: int | None = Field(default=8, ge=2, le=600)
 
 
 class JobState(BaseModel):
@@ -209,12 +211,12 @@ async def chat(req: ChatRequest):
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
 
-def _run_local_effect(job_id: str, prompt: str, effect: str, aspect: str, duration: int):
+def _run_local_effect(job_id: str, prompt: str, effect: str, aspect: str, duration: int, quality: str = "360p"):
     job = jobs[job_id]
     try:
         job.status = "generating"
         target = MEDIA_DIR / f"{job_id}.mp4"
-        render_effect_video(prompt, effect or "neon_pulse", target, duration, aspect)
+        render_effect_video(prompt, effect or "neon_pulse", target, duration, aspect, quality=quality or "360p")
         job.status = "completed"
         job.download_url = f"/v1/videos/{job_id}/download"
     except Exception as exc:
@@ -244,7 +246,7 @@ async def _run_video_job(job_id: str, req: VideoRequest, key: str, pid: str, pro
                 job.error = f"Nuvem falhou ({cloud_err}), gerando com efeito local…"
         job.model = f"local:{req.effect}"
         await asyncio.to_thread(_run_local_effect, job_id, req.prompt, req.effect or "neon_pulse",
-                                req.aspect_ratio, int(req.duration_seconds or 8))
+                                req.aspect_ratio, int(req.duration_seconds or 8), req.quality or "360p")
     except Exception as exc:
         job.status = "failed"
         job.error = f"Erro interno controlado: {exc.__class__.__name__}"
@@ -258,7 +260,7 @@ async def create_video(req: VideoRequest):
         job_id = uuid.uuid4().hex
         jobs[job_id] = JobState(job_id=job_id, status="queued", provider="local", model=f"local:{req.effect}")
         asyncio.create_task(asyncio.to_thread(_run_local_effect, job_id, req.prompt,
-                                              req.effect or "neon_pulse", req.aspect_ratio, int(req.duration_seconds or 8)))
+                                              req.effect or "neon_pulse", req.aspect_ratio, int(req.duration_seconds or 8), req.quality or "360p"))
         return jobs[job_id]
     key, pid, prov = await _resolve(req.provider, raw, req.base_url)
     if pid not in ("google", "replicate", "local") and req.use_cloud:
@@ -283,18 +285,18 @@ async def smart(req: SmartRequest):
     # 1) Sem chave: vídeo local ou eco de chat — sempre responde
     if not raw:
         if wants_video:
-            vr = VideoRequest(prompt=msg, aspect_ratio=req.aspect_ratio,
+            vr = VideoRequest(prompt=msg, aspect_ratio=req.aspect_ratio, quality=req.quality or "360p",
                               duration_seconds=req.duration_seconds, effect=req.effect, use_cloud=False)
             job_id = uuid.uuid4().hex
             jobs[job_id] = JobState(job_id=job_id, status="queued", provider="local", model=f"local:{req.effect}")
             asyncio.create_task(asyncio.to_thread(_run_local_effect, job_id, msg, req.effect or "neon_pulse",
-                                                  req.aspect_ratio, int(req.duration_seconds or 8)))
+                                                  req.aspect_ratio, int(req.duration_seconds or 8), req.quality or "360p"))
             return {"mode": "video", "job": jobs[job_id].model_dump(), "text": "Gerando seu vídeo com efeito local (sem chave). Acompanhe o status."}
-        return {"mode": "chat", "text": f"Entendi: “{msg[:300]}”. Cole uma API KEY acima para respostas com IA avançada, ou peça “crie um vídeo...” para gerar MP4 na hora com 1 dos 30 efeitos.", "provider": "local"}
+        return {"mode": "chat", "text": f"Entendi: “{msg[:300]}”. Cole uma API KEY acima para respostas com IA avançada, ou peça “crie um vídeo...” para gerar MP4 na hora com 1 dos 36 efeitos.", "provider": "local"}
     # 2) Com chave: identifica sozinho
     key, pid, prov = await _resolve(req.provider, raw, req.base_url)
     if wants_video:
-        vr = VideoRequest(prompt=msg, provider=req.provider, aspect_ratio=req.aspect_ratio,
+        vr = VideoRequest(prompt=msg, provider=req.provider, aspect_ratio=req.aspect_ratio, quality=req.quality or "360p",
                           duration_seconds=req.duration_seconds, effect=req.effect, use_cloud=True)
         # propaga chave sem logar
         from pydantic import SecretStr
@@ -376,11 +378,13 @@ footer{margin-top:18px;color:#66719a;font-size:12px;text-align:center}
 
 <div class="card"><b>🔑 Chave (nunca exibimos URLs nem sua chave)</b>
 <div class="keyrow" style="margin-top:10px"><div style="flex:2;min-width:220px"><input id="key" type="password" placeholder="Cole aqui: AIza… / sk-… / gsk_… / hf_… / r8_… qualquer uma"></div>
-<div style="flex:1;min-width:150px"><select id="aspect"><option value="16:9">16:9 paisagem</option><option value="9:16">9:16 vertical</option></select></div></div>
+<div style="flex:1;min-width:130px"><select id="aspect"><option value="16:9">16:9 paisagem</option><option value="9:16">9:16 vertical</option></select></div>
+<div style="flex:1;min-width:130px"><select id="quality"><option value="360p">360p leve</option><option value="480p">480p</option><option value="720p">720p HD</option><option value="1080p">1080p Full</option></select></div>
+<div style="flex:1;min-width:130px"><select id="dur"><option value="8">8s</option><option value="15">15s</option><option value="30">30s</option><option value="60">1 min</option><option value="180">3 min</option><option value="300">5 min</option><option value="600">10 min</option></select></div></div>
 <div class="row"><span class="badge" id="prov">provedor: auto-detect</span><span class="badge" id="fxbadge">efeito: neon_pulse</span><span class="badge" id="health">…</span></div>
-<p class="muted">Grátis e pagas suportadas: Google/Veo, OpenAI, Anthropic, Groq, Together, OpenRouter, DeepSeek, Mistral, HF, Replicate, fal, Fireworks, xAI… + render local com 30 efeitos (funciona sem chave).</p></div>
+<p class="muted">Grátis e pagas suportadas: Google/Veo, OpenAI, Anthropic, Groq, Together, OpenRouter, DeepSeek, Mistral, HF, Replicate, fal, Fireworks, xAI… + render local com 36 efeitos (funciona sem chave, até 10 min).</p></div>
 
-<div class="card"><b>⚡ 30 efeitos especiais</b><div class="effects" id="fx"></div></div>
+<div class="card"><b>⚡ 36 efeitos especiais</b><div class="effects" id="fx"></div></div>
 
 <div class="card"><b>💬 Chat inteligente</b><p class="muted">Ex: “crie um vídeo neon de uma cidade chuvosa” → gera MP4. Qualquer outra frase → a IA responde.</p>
 <div id="chat"><div class="sys">Bem-vindo ao modo cyberpunk. Digite abaixo 👇</div></div>
@@ -397,7 +401,7 @@ function creds(){return{api_key:$('key').value||null,provider:'auto'}}
 function bubble(who,text){const d=document.createElement('div');d.className='msg '+(who==='me'?'me':'ai');d.textContent=text;$('chat').appendChild(d);$('chat').scrollTop=99999;return d}
 async function loadFx(){const r=await fetch('/v1/effects');const j=await r.json();FXLIST=j.effects;$('fxcount').textContent=j.total+' efeitos ativos';const box=$('fx');box.innerHTML='';j.effects.forEach(f=>{const b=document.createElement('button');b.className='fx'+(f.id===FX?' on':'');b.textContent='✦ '+f.name;b.title=f.desc;b.onclick=()=>{FX=f.id;$('fxbadge').textContent='efeito: '+FX;box.querySelectorAll('.fx').forEach(x=>x.classList.remove('on'));b.classList.add('on')};box.appendChild(b)})}
 async function poll(job){while(job.status==='queued'||job.status==='generating'){await new Promise(r=>setTimeout(r,4000));const r=await fetch('/v1/videos/'+job.job_id);job=await r.json()}return job}
-async function send(forceVideo){const t=$('msg').value.trim();if(!t)return;$('msg').value='';bubble('me',t);const w=bubble('ai','processando…');try{let body={...creds(),message:t,effect:FX,aspect_ratio:$('aspect').value};if(forceVideo)body.message='crie um vídeo: '+body.message;const j=await api('/v1/smart',body);if(j.mode==='video'){w.textContent='🎬 '+(j.text||'Gerando vídeo…');const done=await poll(j.job);if(done.status==='completed'){$('player').innerHTML='<video controls autoplay loop src="'+done.download_url+'"></video><div class="row"><a href="'+done.download_url+'" download><button>⬇ BAIXAR MP4</button></a></div>';w.textContent+=' ✅ pronto!'}else{w.textContent+=' ❌ '+(done.error||'falhou')}}else{w.textContent=j.text}}catch(e){w.textContent='❌ '+e.message}}
+async function send(forceVideo){const t=$('msg').value.trim();if(!t)return;$('msg').value='';bubble('me',t);const w=bubble('ai','processando…');try{let body={...creds(),message:t,effect:FX,aspect_ratio:$('aspect').value,quality:$('quality').value,duration_seconds:parseInt($('dur').value||'8')};if(forceVideo)body.message='crie um vídeo: '+body.message;const j=await api('/v1/smart',body);if(j.mode==='video'){w.textContent='🎬 '+(j.text||'Gerando vídeo…');const done=await poll(j.job);if(done.status==='completed'){$('player').innerHTML='<video controls autoplay loop src="'+done.download_url+'"></video><div class="row"><a href="'+done.download_url+'" download><button>⬇ BAIXAR MP4</button></a></div>';w.textContent+=' ✅ pronto!'}else{w.textContent+=' ❌ '+(done.error||'falhou')}}else{w.textContent=j.text}}catch(e){w.textContent='❌ '+e.message}}
 $('send').onclick=()=>send(false);$('btnVideo').onclick=()=>{if(!$('msg').value.trim())$('msg').value='crie um vídeo cyberpunk de uma cidade neon na chuva';send(true)};
 $('btnClear').onclick=()=>{$('chat').innerHTML='';$('player').innerHTML=''};
 $('msg').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(false)}});

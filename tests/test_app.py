@@ -123,3 +123,62 @@ def test_local_video_always_renders(client):
     d = client.get(f"/v1/videos/{job_id}/download")
     assert d.status_code == 200
     assert len(d.content) > 5000
+
+
+def test_all_qualities_render_short(client):
+    import time
+    for quality in ["360p", "480p", "720p"]:
+        r = client.post("/v1/videos", json={"prompt": f"teste {quality}", "effect": "neon_pulse",
+                                             "duration_seconds": 2, "quality": quality,
+                                             "aspect_ratio": "16:9", "use_cloud": False})
+        assert r.status_code == 202, (quality, r.text)
+        job_id = r.json()["job_id"]
+        s = {}
+        for _ in range(40):
+            time.sleep(1)
+            s = client.get(f"/v1/videos/{job_id}").json()
+            if s["status"] in ("completed", "failed"):
+                break
+        assert s["status"] == "completed", (quality, s)
+        d = client.get(f"/v1/videos/{job_id}/download")
+        assert d.status_code == 200 and len(d.content) > 5000, quality
+
+
+def test_vertical_and_smart_video(client):
+    import time
+    r = client.post("/v1/videos", json={"prompt": "vertical teste", "effect": "portal",
+                                         "duration_seconds": 2, "aspect_ratio": "9:16",
+                                         "quality": "360p", "use_cloud": False})
+    assert r.status_code == 202, r.text
+    jid = r.json()["job_id"]
+    for _ in range(30):
+        time.sleep(1)
+        s = client.get(f"/v1/videos/{jid}").json()
+        if s["status"] in ("completed", "failed"):
+            break
+    assert s["status"] == "completed", s
+    r = client.post("/v1/smart", json={"message": "crie um vídeo teste de 2s",
+                                       "effect": "matrix_rain", "duration_seconds": 2, "quality": "360p"})
+    assert r.status_code == 202, r.text
+    assert r.json()["mode"] == "video"
+    jid = r.json()["job"]["job_id"]
+    for _ in range(30):
+        time.sleep(1)
+        s = client.get(f"/v1/videos/{jid}").json()
+        if s["status"] in ("completed", "failed"):
+            break
+    assert s["status"] == "completed", s
+
+
+def test_ten_minutes_accepted():
+    from app import VideoRequest, SmartRequest
+    v = VideoRequest(prompt="filme longo", duration_seconds=600, quality="720p")
+    assert v.duration_seconds == 600
+    s = SmartRequest(message="crie um vídeo de 10 minutos", duration_seconds=600, quality="1080p")
+    assert s.duration_seconds == 600
+    import pytest
+    with pytest.raises(Exception):
+        VideoRequest(prompt="x", duration_seconds=601)
+    # renderer limita sem estourar (não renderiza 600s no teste)
+    from effects import QUALITY_SIZES
+    assert set(QUALITY_SIZES) == {"360p", "480p", "720p", "1080p"}
