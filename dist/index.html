@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gerador de Vídeo — Veo</title>
+<meta name="description" content="Gerador de vídeo Veo: descubra modelos, crie roteiros com chat e gere vídeos. Interface estática.">
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#e8ecf7}
+main{max-width:980px;margin:0 auto;padding:28px 18px 60px}
+h1{margin:0 0 8px;font-size:28px}
+h2{margin:0 0 4px;font-size:18px}
+p{color:#aeb8d4;line-height:1.5}
+.badge{display:inline-block;font-size:12px;color:#0b1020;background:#8ef0b6;border-radius:999px;padding:3px 10px;font-weight:700;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+section{background:#141b31;border:1px solid #283454;border-radius:14px;padding:18px;margin-top:16px}
+label{display:block;margin:12px 0 6px;font-size:13px;color:#b6c2df}
+input,textarea,select{width:100%;box-sizing:border-box;border:1px solid #344365;background:#0d1428;color:#f5f7ff;border-radius:9px;padding:10px;font:inherit}
+textarea{min-height:130px;resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:9px;padding:10px 14px;background:#6d7cff;color:#fff;font-weight:700;cursor:pointer}
+button.secondary{background:#2d3a5c}
+button:disabled{opacity:.6;cursor:wait}
+pre{white-space:pre-wrap;word-break:break-word;background:#0a1020;border:1px solid #293654;border-radius:9px;padding:14px;min-height:70px;overflow:auto;font-size:13px}
+.muted{font-size:12px;color:#8794b7}
+.status{color:#aee7ba}
+.danger{color:#ff9eab}
+footer{margin-top:22px;text-align:center}
+a{color:#8ea2ff}
+</style>
+</head>
+<body>
+<main>
+<span class="badge">APP ESTÁTICA · SEM BUILD COMPLEXO</span>
+<h1>Gerador de Vídeo — Veo</h1>
+<p>Descubra modelos do catálogo oficial, crie roteiros com chat e gere vídeos Veo 3.1. A chave API fica apenas no seu navegador e em cada requisição — nada é salvo no servidor. Baseado em <a href="https://github.com/yuriirvine123Lord/Gerador-de-video">yuriirvine123Lord/Gerador-de-video</a>.</p>
+
+<section id="credenciais">
+<h2>1. Credenciais</h2>
+<label for="key">Chave API (somente no navegador)</label>
+<input id="key" type="password" placeholder="AIza... / sk-... / sk-ant-..." autocomplete="off">
+<label for="provider">Provedor</label>
+<select id="provider">
+<option value="auto">Auto detectar</option>
+<option value="google">Google / Gemini / Veo</option>
+<option value="openai">OpenAI</option>
+<option value="anthropic">Anthropic</option>
+<option value="openai_compatible">OpenAI compatível</option>
+</select>
+<label for="base">Base URL customizada (opcional)</label>
+<input id="base" placeholder="https://seu-endpoint/v1">
+<div class="row"><button id="discover">Descobrir modelos</button></div>
+<pre id="discovery" class="muted">A descoberta consulta o catálogo oficial do provedor e nunca expõe sua chave. Clique em "Descobrir modelos" após colar a chave.</pre>
+</section>
+
+<div class="grid">
+<section>
+<h2>2. Chat / roteiro</h2>
+<label for="chatPrompt">Mensagem</label>
+<textarea id="chatPrompt" placeholder="Crie um roteiro cinematográfico curto para um vídeo de 8 segundos...">Crie um roteiro cinematográfico curto para um vídeo de 8 segundos: rua neon na chuva, câmera lenta, som ambiente.</textarea>
+<label for="chatModel">Modelo (opcional — automático pelo catálogo)</label>
+<input id="chatModel" placeholder="ex.: gemini-2.5-flash">
+<div class="row"><button id="chat">Enviar</button><button id="copyChat" class="secondary">Copiar resposta</button></div>
+<pre id="chatOut">A resposta aparecerá aqui. Sem chave, é exibido um roteiro de demonstração local.</pre>
+</section>
+
+<section>
+<h2>3. Vídeo Veo</h2>
+<label for="videoPrompt">Prompt visual + áudio</label>
+<textarea id="videoPrompt" placeholder="Uma tomada cinematográfica... incluindo diálogos e som ambiente.">A cinematic close-up of a rain-soaked neon street at night, slow dolly forward, realistic reflections, distant traffic and gentle rain sound, no text on screen.</textarea>
+<label for="videoModel">Modelo (opcional)</label>
+<input id="videoModel" placeholder="veo-3.1-generate-preview">
+<div class="row"><button id="video">Gerar vídeo</button></div>
+<pre id="videoOut">O job assíncrono aparecerá aqui. A geração real usa a API Gemini (predictLongRunning) com polling automático.</pre>
+</section>
+</div>
+
+<section>
+<h2>Como funciona</h2>
+<p class="muted">Prioridade de vídeo: <span class="status">veo-3.1-generate-preview</span> → variantes 3.1 / 3.0 / 2.0 do catálogo ao vivo. Detecção de chave: <span class="status">AIza… → Google</span>, sk-ant-… → Anthropic, sk-… → OpenAI. Para produção, use HTTPS, autenticação própria e fila (Redis/worker) — esta página é um bloco local de teste, cópia e colagem.</p>
+</section>
+
+<footer><p class="muted">Gerador de Vídeo · interface estática servida de <code>/dist</code> na porta 3000</p></footer>
+</main>
+<script>
+(function(){
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+function redact(k){ if(!k || k.length <= 8) return "********"; return k.slice(0,4) + "…" + k.slice(-4); }
+function creds(){
+  var key = ($("key").value || "").trim();
+  return { key: key, provider: $("provider").value, base: ($("base").value || "").trim() };
+}
+function inferProvider(key, provider, base){
+  var p = (provider || "auto").toLowerCase().trim();
+  var aliases = { "gemini":"google", "google_genai":"google", "google-gemini":"google", "openai-compatible":"openai_compatible", "compatible":"openai_compatible" };
+  p = aliases[p] || p;
+  if(p !== "auto") return p;
+  var host = (base || "").toLowerCase();
+  if(host.indexOf("generativelanguage.googleapis.com") !== -1) return "google";
+  if(host.indexOf("anthropic.com") !== -1) return "anthropic";
+  if(host.indexOf("api.openai.com") !== -1) return "openai";
+  if(key.indexOf("AIza") === 0) return "google";
+  if(key.indexOf("sk-ant-") === 0) return "anthropic";
+  if(key.indexOf("sk-") === 0) return "openai";
+  throw new Error("Não foi possível identificar esta chave. Informe provedor e base_url.");
+}
+function demoScript(){
+  return "ROTEIRO DEMO (8s, 16:9)\n\n0–2s — Plano fechado: rua neon molhada, reflexos, chuva fina. Câmera: dolly lento à frente.\n2–5s — Travelling lateral: letreiros desfocados, poças espelhadas. Áudio: tráfego distante + chuva.\n5–8s — Close no protagonista sob guarda-chuva transparente. Sem texto na tela.\n\nCole uma chave Gemini para gerar o roteiro real com o modelo do catálogo.";
+}
+$("discover").addEventListener("click", function(){
+  var b = $("discover"), out = $("discovery");
+  b.disabled = true; out.textContent = "Consultando catálogo...";
+  (async function(){
+    try {
+      var c = creds();
+      if(!c.key) throw new Error("Cole sua chave API primeiro (ela não sai do navegador).");
+      var prov = inferProvider(c.key, c.provider, c.base);
+      if(prov !== "google"){
+        out.textContent = JSON.stringify({ provider: prov, key_hint: redact(c.key), note: "Descoberta de vídeo Veo disponível apenas com chave Google/Gemini. Chat disponível para este provedor." }, null, 2);
+        return;
+      }
+      var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": c.key } });
+      if(!r.ok) throw new Error("Provedor recusou (" + r.status + "). Verifique a chave e o acesso ao Gemini/Veo.");
+      var j = await r.json();
+      var models = ((j.models || j.data) || []).map(function(m){ var n = (m.name || m.id || ""); return n.split("/").pop(); });
+      var prio = ["veo-3.1-generate-preview","veo-3.1-generate-001","veo-3.0-generate-preview","veo-3.0-generate-001","veo-2.0-generate-001"];
+      var sel = prio.find(function(p){ return models.indexOf(p) !== -1; }) || models.find(function(m){ return m.indexOf("veo") === 0; }) || models[0] || null;
+      out.textContent = JSON.stringify({ provider: "google", key_hint: redact(c.key), selected_model: sel, models: models.slice(0, 60), capabilities: { chat: models.some(function(m){return m.indexOf("gemini")===0;}), video: models.some(function(m){return m.indexOf("veo")===0;}) } }, null, 2);
+    } catch(e){ out.textContent = "Erro: " + (e && e.message ? e.message : e); }
+    finally { b.disabled = false; }
+  })();
+});
+$("chat").addEventListener("click", function(){
+  var b = $("chat"), out = $("chatOut");
+  b.disabled = true; out.textContent = "Gerando resposta...";
+  (async function(){
+    try {
+      var c = creds();
+      if(!c.key){ out.textContent = demoScript(); return; }
+      var prov = inferProvider(c.key, c.provider, c.base);
+      if(prov !== "google"){ out.textContent = "Chat multi-provedor (OpenAI/Anthropic) exige backend com CORS. Use a API original FastAPI ou cole uma chave Google para chat direto no navegador."; return; }
+      var model = ($("chatModel").value || "").trim() || "gemini-2.5-flash";
+      var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
+        method: "POST",
+        headers: { "x-goog-api-key": c.key, "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: $("chatPrompt").value }] }], generationConfig: { temperature: 0.7 } })
+      });
+      if(!r.ok) throw new Error("Gemini recusou (" + r.status + "). Confira o modelo e a chave.");
+      var j = await r.json();
+      var parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+      var text = parts.map(function(p){ return p.text || ""; }).join("\n").trim();
+      out.textContent = text || "O Gemini não retornou texto.";
+    } catch(e){ out.textContent = "Erro: " + (e && e.message ? e.message : e); }
+    finally { b.disabled = false; }
+  })();
+});
+$("copyChat").addEventListener("click", function(){
+  var t = $("chatOut").textContent;
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ $("copyChat").textContent = "Copiado"; setTimeout(function(){ $("copyChat").textContent = "Copiar resposta"; }, 1200); }); }
+});
+$("video").addEventListener("click", function(){
+  var b = $("video"), out = $("videoOut");
+  b.disabled = true; out.textContent = "Enfileirando job Veo...";
+  (async function(){
+    try {
+      var c = creds();
+      if(!c.key){ out.textContent = "Modo demonstração: cole uma chave Google/Gemini com acesso ao Veo para gerar vídeo real.\n\nFluxo real: POST models/{veo-3.1-generate-preview}:predictLongRunning → polling da operação → download MP4.\nPrompt atual (" + $("videoPrompt").value.length + " caracteres) pronto para envio."; return; }
+      var prov = inferProvider(c.key, c.provider, c.base);
+      if(prov !== "google") throw new Error("A geração Veo usa uma chave Google/Gemini.");
+      var model = ($("videoModel").value || "").trim() || "veo-3.1-generate-preview";
+      var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":predictLongRunning", {
+        method: "POST",
+        headers: { "x-goog-api-key": c.key, "Content-Type": "application/json" },
+        body: JSON.stringify({ instances: [{ prompt: $("videoPrompt").value }], parameters: { aspectRatio: "16:9", resolution: "720p" } })
+      });
+      var j = await r.json().catch(function(){ return {}; });
+      if(!r.ok) throw new Error("Veo recusou (" + r.status + "): " + JSON.stringify(j).slice(0, 300));
+      var op = j.name || (j.operation || {}).name;
+      if(!op) throw new Error("O Veo não retornou o nome da operação assíncrona.");
+      out.textContent = "Job criado: " + op + "\nAcompanhando operação (polling a cada 10s, até 15min)...";
+      var deadline = Date.now() + 15 * 60 * 1000;
+      while(Date.now() < deadline){
+        await new Promise(function(res){ setTimeout(res, 10000); });
+        var base = "https://generativelanguage.googleapis.com/v1beta/";
+        var url = op.indexOf("http") === 0 ? op : base + op.replace(/^\//, "");
+        var p = await fetch(url, { headers: { "x-goog-api-key": c.key } });
+        var s = await p.json();
+        if(s.done){
+          out.textContent = "Concluído:\n" + JSON.stringify(s.response || s, null, 2).slice(0, 2000);
+          return;
+        }
+        out.textContent = "Gerando vídeo... operação ainda em andamento (" + new Date().toLocaleTimeString() + ").";
+      }
+      out.textContent = "Tempo limite excedido (15min). Consulte a operação depois: " + op;
+    } catch(e){ out.textContent = "Erro: " + (e && e.message ? e.message : e); }
+    finally { b.disabled = false; }
+  })();
+});
+})();
+</script>
+</body>
+</html>
