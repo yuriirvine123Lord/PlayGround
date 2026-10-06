@@ -1,0 +1,16 @@
+{
+  "feed": "win888-demo-originals",
+  "versao": 1,
+  "moeda": "BRL-DEMO",
+  "jogos": [
+    {"id": "tiger", "nome": "Fortune Tiger", "provedor": "ORIGINAIS", "rtp": 0.968, "categorias": ["slots", "popular"], "launch": "index.html?jogo=tiger", "thumb": "tiger"},
+    {"id": "dragon", "nome": "Fortune Dragon", "provedor": "ORIGINAIS", "rtp": 0.965, "categorias": ["slots", "popular"], "launch": "index.html?jogo=dragon", "thumb": "dragon"},
+    {"id": "slots777", "nome": "Super 777", "provedor": "ORIGINAIS", "rtp": 0.971, "categorias": ["slots", "popular"], "launch": "index.html?jogo=slots777", "thumb": "slots777"},
+    {"id": "rabbit", "nome": "Fortune Rabbit", "provedor": "ORIGINAIS", "rtp": 0.966, "categorias": ["slots", "popular"], "launch": "index.html?jogo=rabbit", "thumb": "rabbit"},
+    {"id": "ox", "nome": "Fortune Ox", "provedor": "ORIGINAIS", "rtp": 0.966, "categorias": ["slots", "popular"], "launch": "index.html?jogo=ox", "thumb": "ox"},
+    {"id": "gates", "nome": "Gates of Olympus", "provedor": "ORIGINAIS", "rtp": 0.965, "categorias": ["slots", "popular"], "launch": "index.html?jogo=gates", "thumb": "gates"},
+    {"id": "crash", "nome": "Crash Avião", "provedor": "ORIGINAIS", "rtp": 0.97, "categorias": ["crash", "popular"], "launch": "index.html?jogo=crash", "thumb": "crash"},
+    {"id": "mines", "nome": "Mines", "provedor": "ORIGINAIS", "rtp": 0.972, "categorias": ["crash", "popular"], "launch": "index.html?jogo=mines", "thumb": "mines"}
+  ],
+  "nota": "Feed de jogos ORIGINAIS demo. Provedores reais entram aqui só com licença (launch por iframe/URL do agregador)."
+}

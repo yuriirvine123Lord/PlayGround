@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>888WIN Demo — Casa de Apostas | Tiger, Slots, Crash, Roleta + Esportes</title>
+<meta name="description" content="Site DEMO educacional de casa de apostas estilo 888win. Créditos virtuais, sem dinheiro real. +18 Jogue com responsabilidade.">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐯</text></svg>">
+</head>
+<body>
+<div class="age-bar">🔞 +18 SITE DEMO — créditos 100% virtuais, sem dinheiro real, sem prêmios. Jogue com responsabilidade.</div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo" onclick="scrollTo({top:0,behavior:'smooth'})"><span class="crown">👑</span> <span>888<b>WIN</b></span> <em>PRO DEMO</em></div>
+    <div class="search"><input id="search" placeholder="🔍 Buscar jogo... ex: tiger, crash, roleta" oninput="filterGames()"></div>
+    <div class="wallet">
+      <div class="balance" title="Saldo virtual">💰 <span id="balance">R$ 1.000,00</span></div>
+      <button class="btn deposit" onclick="openWallet('deposit')">Depositar</button>
+      <button class="btn ghost" onclick="openWallet('withdraw')">Sacar</button>
+      <button class="btn ghost sm" onclick="resetBalance()" title="Resetar saldo demo">↺</button>
+    </div>
+  </div>
+  <nav class="cats">
+    <button class="cat" data-cat="all" onclick="setCat('all',this)">🏠 Início</button>
+    <button class="cat" data-cat="popular" onclick="setCat('popular',this)">🔥 Populares</button>
+    <button class="cat active" data-cat="slots" onclick="setCat('slots',this)">🎰 Slots</button>
+    <button class="cat" data-cat="crash" onclick="setCat('crash',this)">🚀 Crash</button>
+    <button class="cat" data-cat="mesa" onclick="setCat('mesa',this)">🃏 Mesa</button>
+    <button class="cat" data-cat="esporte" onclick="setCat('esporte',this)">⚽ Esportes</button>
+    <button class="cat" onclick="openHistory()">📜 Histórico</button>
+    <button class="cat" onclick="openRTP()">⚙️ <span id="rtpBadge">RTP estudo 97%</span></button>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-text">
+    <h2><span class="green">JOGO DO TIGER</span><br>Ganhe até <span class="green">2.500x</span> sua Aposta</h2>
+    <p>🐯🐲🐂🐰⚡🍒 Só caça-níqueis originais estilo Fortune. Sem ao vivo. Tudo com crédito demo.</p>
+    <div class="hero-btns">
+      <button class="btn big" onclick="openGame('tiger')">▶ Jogar Tiger agora</button>
+      <button class="btn big outline" onclick="openGame('slots777')">🎰 Jogar 777</button>
+    </div>
+    <div class="hero-stats">
+      <div><b id="online">12.483</b><small>online</small></div>
+      <div><b>R$ 847.200</b><small>pagos hoje (demo)</small></div>
+      <div><b>97,4%</b><small>RTP médio</small></div>
+    </div>
+  </div>
+  <div class="hero-art">
+    <div class="tiger-card" onclick="openGame('tiger')">
+      <div class="tier">★ FORTUNE SERIES ★</div>
+      <div class="tiger-emoji">🐯</div>
+      <div class="reels-mini"><span>7</span><span>7</span><span>7</span></div>
+      <div class="jackpot">JACKPOT • 2.500x • R$ 48.200</div>
+    </div>
+    <div class="float f1">💰</div><div class="float f2">🪙</div><div class="float f3">💎</div>
+  </div>
+</section>
+
+<div class="marquee"><div class="marquee-track" id="winners"></div></div>
+
+<main class="container">
+  <div class="providers"><span class="provider">PG SOFT</span><span class="provider">PRAGMATIC PLAY</span><span class="provider">SPRIBE</span><span class="provider">EVOLUTION</span><span class="provider">EVOPLAY</span><span class="provider">SPORTSBOOK</span></div>
+  <div class="section-head"><h3 id="gridTitle">🔥 Jogos Populares</h3><span id="count"></span></div>
+  <div class="grid" id="grid"></div>
+
+  <section class="sports-preview">
+    <div class="section-head"><h3>⚽ Apostas Esportivas (demo instantânea)</h3><button class="btn sm" onclick="openGame('sports')">Ver todas</button></div>
+    <div class="matches" id="matchesPreview"></div>
+  </section>
+
+  <section class="info">
+    <div class="info-card"><h4>✅ 100% Demo</h4><p>Sem PIX, sem dinheiro real. Saldo em <code>localStorage</code>. Recarregue com “Depositar”.</p></div>
+    <div class="info-card"><h4>🎲 Provably Fair (simulado)</h4><p>Resultados via <code>crypto.getRandomValues</code> no navegador. Sem servidor.</p></div>
+    <div class="info-card"><h4>🔞 Jogo responsável</h4><p>Se fosse real: +18, limites, autoexclusão, CVGA 0800. Este é um projeto de estudo.</p></div>
+  </section>
+</main>
+
+<footer>888WIN demo educacional — inspirado no print enviado. Não afiliado a 888 ou 888win reais. Sem apostas com dinheiro real.<br>Feito para estudo de front-end (HTML/CSS/JS).</footer>
+
+<!-- GAME MODAL -->
+<div class="overlay" id="gameOverlay" onclick="if(event.target===this)closeGame()">
+  <div class="modal">
+    <div class="modal-head"><div id="gameTitle">Jogo</div><button class="x" onclick="closeGame()">✕</button></div>
+    <div class="modal-body" id="gameBody"></div>
+  </div>
+</div>
+
+<!-- WALLET MODAL -->
+<div class="overlay" id="walletOverlay" onclick="if(event.target===this)closeWallet()">
+  <div class="modal small">
+    <div class="modal-head"><div id="walletTitle">Carteira demo</div><button class="x" onclick="closeWallet()">✕</button></div>
+    <div class="modal-body">
+      <p class="muted">Dinheiro fictício. Nada sai ou entra da sua conta.</p>
+      <label>Valor (R$)<input id="walletAmount" type="number" value="500" min="1" max="100000"></label>
+      <div class="row"><button class="btn" id="walletConfirm" onclick="confirmWallet()">Confirmar</button>
+      <button class="btn ghost" onclick="closeWallet()">Cancelar</button></div>
+      <p class="muted">Saldo atual: <b id="walletBalance"></b></p>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="overlay" id="histOverlay" onclick="if(event.target===this)closeHistory()">
+  <div class="modal small">
+    <div class="modal-head"><div>📜 Histórico</div><button class="x" onclick="closeHistory()">✕</button></div>
+    <div class="modal-body"><div id="histList"></div><button class="btn ghost sm" onclick="clearHistory()">Limpar</button></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

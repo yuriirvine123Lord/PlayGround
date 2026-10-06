@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 380" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1b0a02"/>
+      <stop offset="40%" stop-color="#7c2d12"/>
+      <stop offset="100%" stop-color="#1b0a02"/>
+    </linearGradient>
+    <radialGradient id="gold" cx="50%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#fde68a" stop-opacity=".9"/>
+      <stop offset="60%" stop-color="#d97706" stop-opacity=".6"/>
+      <stop offset="100%" stop-color="#7c2d12" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect rx="20" width="540" height="380" fill="url(#bg)"/>
+  <circle cx="270" cy="150" r="160" fill="url(#gold)" opacity=".28"/>
+  <g fill="#fde68a" stroke="#b45309" stroke-width="4" filter="drop-shadow(0 14px 32px rgba(0,0,0,.55))">
+    <circle cx="270" cy="148" r="78"/>
+    <text x="270" y="170" font-size="76" text-anchor="middle" dominant-baseline="middle" stroke-width="0" fill="#7c2d12">🐯</text>
+  </g>
+  <g font-family="Inter,Arial Black">
+    <text x="270" y="266" font-size="36" font-weight="900" fill="#fde68a" text-anchor="middle" letter-spacing="10px" stroke="#3b0e01" stroke-width="2">FORTUNE TIGER</text>
+    <text x="270" y="310" font-size="17" font-weight="800" fill="#fbbf24" text-anchor="middle" letter-spacing="6px">PG SOFT • 96.8% RTP • 2500x MAX</text>
+  </g>
+  <g stroke-linecap="round" opacity=".9">
+    <path d="M60 90 L120 90 L120 150 M420 90 L360 90 L360 150 M60 290 L120 290 L120 230 M420 290 L360 290 L360 230" stroke="#fde68a" stroke-width="6" fill="none"/>
+  </g>
+</svg>

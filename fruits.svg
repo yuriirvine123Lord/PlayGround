@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 380" preserveAspectRatio="xMidYMid slice">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#0b3d26"/><stop offset="100%" stop-color="#16a34a"/>
+  </linearGradient></defs>
+  <rect rx="20" width="540" height="380" fill="url(#bg)"/>
+  <g filter="drop-shadow(0 12px 28px rgba(0,0,0,.5))">
+    <text x="270" y="170" font-size="92" text-anchor="middle" dominant-baseline="middle">🍒</text>
+  </g>
+  <g font-family="Inter,Arial Black">
+    <text x="270" y="266" font-size="34" font-weight="900" fill="#fff" text-anchor="middle" letter-spacing="8px">FRUIT PARTY</text>
+    <text x="270" y="310" font-size="15" font-weight="800" fill="#f1f5f9" text-anchor="middle" letter-spacing="6px">PRAGMATIC • 96.9% RTP • 5000x</text>
+  </g>
+</svg>
