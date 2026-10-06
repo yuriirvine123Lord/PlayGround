@@ -1,0 +1,15 @@
+<resources>
+    <!-- Netzack Videos V2 — paleta cyberpunk limpa -->
+    <color name="abyss">#080812</color>
+    <color name="panel">#101024</color>
+    <color name="panel2">#16163A</color>
+    <color name="neon_cyan">#00F0FF</color>
+    <color name="neon_pink">#FF2EA6</color>
+    <color name="neon_purple">#7B2FFF</color>
+    <color name="grid_line">#23234D</color>
+    <color name="text">#F2F4FF</color>
+    <color name="muted">#9AA3C7</color>
+    <color name="ok">#39FF88</color>
+    <color name="warn">#FFB300</color>
+    <color name="danger">#FF5470</color>
+</resources>
