@@ -1,33 +1,30 @@
-# Netzack Videos — App Android
+# Netzack Videos V2 — App Android
 
-App Android nativo (Kotlin) + backend FastAPI multi-IA com detecção automática.
+App Android nativo (Kotlin) + backend FastAPI. Um chat só, um prompt só:
+só a chave API — detecção 100% automática de IA e modelo.
 
 ## Nome / pacote
-- Nome: **Netzack Videos**
-- Pacote: `com.netzack.videos`
-- Versão: 1.0.0 (versionCode 1)
+- Nome: **Netzack Videos V2**
+- Pacote: `com.netzack.videos` (mantido para atualizar por cima da v1)
+- Versão: 2.0.0 (versionCode 2)
 
-## O que o app faz
-1. **Multi-IA automática** (`ProviderDetector.kt` = mesma regra do `server/providers.py`):
+## O que o app faz (V2: tudo automático, prompt único)
+1. **Só a chave API** — sem escolher provedor nem modelo (`provider=auto`, `model=null` sempre):
    - `AIza…` → Google / Gemini / Veo
    - `sk-ant-…` → Anthropic
    - `sk-…` → OpenAI
-   - host `generativelanguage…` / `anthropic…` / `api.openai…` → provedor pelo `base_url`
-   - chave desconhecida → exige `provider` + `base_url` explícitos (sem adivinhar endpoint)
-2. **Descobrir modelos**: `POST /v1/discover` — mostra catálogo ao vivo, nunca exibe a chave (só `AIza…3456`).
-3. **Chat / roteiro**: `POST /v1/chat` — gera roteiro e permite copiar.
-4. **Vídeo estilo Veo 3 ou melhor**:
-   - `POST /v1/videos` → polling `GET /v1/videos/{id}` → download MP4 → `VideoView`
-   - 11 **efeitos especiais** (`Effects.kt`): Cinema Épico, Neon Chuvoso, Drone Aéreo, Slow 120fps, Anime, Sci-Fi Holográfico, VHS 80s, Terror, Macro Natureza, Ação Zoom, Original
-   - Controles: 16:9 / 9:16, 720p / 1080p / 4k, 4s / 6s / 8s, gerar áudio, negative prompt automático
+   - chave desconhecida → erro claro pedindo endpoint próprio (sem adivinhar)
+2. **Testar servidor**: `GET /health` — diagnostica conexão antes de gerar (a causa nº 1 de "não gera").
+3. **Identificar IA e modelo**: `POST /v1/discover` — mostra provedor + modelo detectados, nunca exibe a chave.
+4. **Prompt único** para tudo: **Conversar** (`POST /v1/chat` → roteiro) ou **Gerar vídeo** (`POST /v1/videos` → polling → MP4 → `VideoView`).
+5. **Vídeo estilo Veo 3 ou melhor** + 11 **efeitos especiais** (`Effects.kt`): Cinema Épico, Neon Chuvoso, Drone Aéreo, Slow 120fps, Anime, Sci-Fi Holográfico, VHS 80s, Terror, Macro Natureza, Ação Zoom, Original.
+6. **Erros claros**: se o vídeo falhar, o app mostra o motivo (ex: chave sem acesso ao Veo, servidor fora do ar).
 
 ## Download do APK
-- **Local (esta máquina)**: `android/app/build/outputs/apk/debug/app-debug.apk` (6.1 MB)
+- **Lançamentos (recomendado)**: https://github.com/yuriirvine123Lord/PlayGround/releases
+  - v2.0.0: `Netzack-Videos-V2-v2.0.0-debug.apk` (6,1 MB)
+- **Local (esta máquina)**: `android/app/build/outputs/apk/debug/app-debug.apk`
 - **GitHub**: aba `Actions` → workflow `Netzack Videos — Android APK` → `Artifacts` → `Netzack-Videos-debug-apk`
-- Em `Release` publicada, o APK também pode ser anexado manualmente como `Netzack-Videos-v1.0.0-debug.apk`.
-
-Cópia pronta para anexar em release:
-- `Netzack-Videos-v1.0.0-debug.apk` (gerado no CI a partir do `app-debug.apk`)
 
 ## Rodar o backend (obrigatório p/ vídeo real)
 ```bash

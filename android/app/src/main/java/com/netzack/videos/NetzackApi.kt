@@ -23,6 +23,15 @@ class NetzackApi(serverBase: String) {
         .build()
     private val json = "application/json; charset=utf-8".toMediaType()
 
+    private fun fail(prefix: String, code: Int, text: String): Nothing {
+        val detail = try {
+            JSONObject(text).optString("detail", text).ifBlank { text }
+        } catch (_: Exception) {
+            text
+        }
+        throw RuntimeException("$prefix (HTTP $code): ${detail.take(500)}")
+    }
+
     private fun post(path: String, body: JSONObject): JSONObject {
         val req = Request.Builder()
             .url("$base$path")
@@ -30,7 +39,7 @@ class NetzackApi(serverBase: String) {
             .build()
         client.newCall(req).execute().use { resp ->
             val text = resp.body?.string() ?: "{}"
-            if (!resp.isSuccessful) throw RuntimeException("HTTP ${resp.code}: ${text.take(500)}")
+            if (!resp.isSuccessful) fail("O servidor recusou", resp.code, text)
             return JSONObject(text)
         }
     }
@@ -39,8 +48,17 @@ class NetzackApi(serverBase: String) {
         val req = Request.Builder().url("$base$path").get().build()
         client.newCall(req).execute().use { resp ->
             val text = resp.body?.string() ?: "{}"
-            if (!resp.isSuccessful) throw RuntimeException("HTTP ${resp.code}: ${text.take(500)}")
+            if (!resp.isSuccessful) fail("Falha ao consultar", resp.code, text)
             return JSONObject(text)
+        }
+    }
+
+    fun health(): String {
+        val req = Request.Builder().url("$base/health").get().build()
+        client.newCall(req).execute().use { resp ->
+            val text = resp.body?.string() ?: "{}"
+            if (!resp.isSuccessful) fail("Servidor respondeu com erro", resp.code, text)
+            return text
         }
     }
 
@@ -113,7 +131,14 @@ class NetzackApi(serverBase: String) {
     fun downloadToFile(jobId: String, dest: File) {
         val req = Request.Builder().url("$base/v1/videos/$jobId/download").get().build()
         client.newCall(req).execute().use { resp ->
-            if (!resp.isSuccessful) throw RuntimeException("Download HTTP ${resp.code}")
+            if (!resp.isSuccessful) {
+                val text = try {
+                    resp.body?.string() ?: ""
+                } catch (_: Exception) {
+                    ""
+                }
+                fail("Falha ao baixar o vídeo", resp.code, text.ifBlank { "{}" })
+            }
             val body = resp.body ?: throw RuntimeException("Resposta vazia no download")
             dest.outputStream().use { out -> body.byteStream().copyTo(out) }
         }

@@ -31,9 +31,9 @@ POLL_INTERVAL = float(os.getenv("VEO_POLL_INTERVAL_SECONDS", "10"))
 JOB_TIMEOUT = float(os.getenv("VEO_JOB_TIMEOUT_SECONDS", "900"))
 
 app = FastAPI(
-    title="Netzack Videos",
-    version="1.0.0",
-    description="Netzack Videos — chat multi-IA com auto-detecção, descoberta segura de modelos e geração de vídeo estilo Veo 3.",
+    title="Netzack Videos V2",
+    version="2.0.0",
+    description="Netzack Videos V2 — um chat só, um prompt só; só a chave API, com detecção automática de IA/modelo e geração de vídeo estilo Veo 3.",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -150,7 +150,7 @@ def _public_discovery(result: DiscoveryResult, selected: str | None, key: str) -
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return {"ok": True, "service": "netzack-videos", "jobs_in_memory": len(jobs)}
+    return {"ok": True, "service": "netzack-videos-v2", "jobs_in_memory": len(jobs)}
 
 
 @app.post("/v1/discover")
@@ -255,12 +255,12 @@ HTML = r"""<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Netzack Videos</title>
+<title>Netzack Videos V2</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif}body{margin:0;background:#0b1020;color:#e8ecf7}main{max-width:980px;margin:0 auto;padding:28px 18px 60px}h1{margin:0 0 8px;font-size:28px}p{color:#aeb8d4}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.grid{grid-template-columns:1fr}}section{background:#141b31;border:1px solid #283454;border-radius:14px;padding:18px;margin-top:16px}label{display:block;margin:12px 0 6px;font-size:13px;color:#b6c2df}input,textarea,select{width:100%;box-sizing:border-box;border:1px solid #344365;background:#0d1428;color:#f5f7ff;border-radius:9px;padding:10px;font:inherit}textarea{min-height:150px;resize:vertical}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:9px;padding:10px 14px;background:#6d7cff;color:white;font-weight:700;cursor:pointer}button.secondary{background:#2d3a5c}button:disabled{opacity:.6;cursor:wait}pre{white-space:pre-wrap;word-break:break-word;background:#0a1020;border:1px solid #293654;border-radius:9px;padding:14px;min-height:70px;overflow:auto}.muted{font-size:12px;color:#8794b7}.status{color:#aee7ba}.danger{color:#ff9eab}
 </style></head>
 <body><main>
-<h1>Netzack Videos</h1>
+<h1>Netzack Videos V2</h1>
 <p>Descubra o provedor, converse com o modelo e envie um prompt de vídeo. A chave fica apenas no navegador e no request atual.</p>
 <section><h2>1. Credenciais</h2>
 <label>Chave API (não salve em produção)</label><input id="key" type="password" placeholder="AIza... / sk-... / sk-ant-...">

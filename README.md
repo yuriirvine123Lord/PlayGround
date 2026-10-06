@@ -17,11 +17,12 @@
 - 🌍 [Create with OMGithub](https://omgithub.com).
 <!-- omgithub:readme:end -->
 
-## Netzack Videos (Android + IA)
+## Netzack Videos V2 (Android + IA)
 
-App **Netzack Videos** (`com.netzack.videos`): multi-IA com detecção automática
-(Google/Gemini/Veo, OpenAI, Anthropic, OpenAI-compatível), chat p/ roteiro e
-geração de vídeo estilo Veo 3 com 11 efeitos especiais.
+App **Netzack Videos V2** (`com.netzack.videos`): um chat só, um prompt só.
+Só a chave API — detecção automática de IA (Google/Gemini/Veo, OpenAI,
+Anthropic, OpenAI-compatível) e do modelo, chat p/ roteiro e geração de
+vídeo estilo Veo 3 com 11 efeitos especiais.
 
 - App: `android/` — build: `cd android && ./gradlew :app:assembleDebug`
 - APK local: `android/app/build/outputs/apk/debug/app-debug.apk`
@@ -31,10 +32,11 @@ geração de vídeo estilo Veo 3 com 11 efeitos especiais.
 
 ## 🚀 Lançamentos
 
-Baixe o aplicativo **Netzack Videos** pronto para instalar no Android:
+Baixe o aplicativo **Netzack Videos V2** pronto para instalar no Android:
 
 | Versão | Arquivo | Download |
 |--------|---------|----------|
+| v2.0.0 | `Netzack-Videos-V2-v2.0.0-debug.apk` (6,1 MB) | [Download direto (release)](https://github.com/yuriirvine123Lord/PlayGround/releases/download/v2.0.0/Netzack-Videos-V2-v2.0.0-debug.apk) |
 | v1.0.0 | `Netzack-Videos-v1.0.0-debug.apk` (6,1 MB) | [Download direto (release)](https://github.com/yuriirvine123Lord/PlayGround/releases/download/v1.0.0/Netzack-Videos-v1.0.0-debug.apk) · [Ver todos os lançamentos](https://github.com/yuriirvine123Lord/PlayGround/releases) |
 
 **Como instalar:**

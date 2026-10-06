@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Netzack Videos</string>
+    <string name="app_name">Netzack Videos V2</string>
     <string name="desc_config">Configuração multi-IA com detecção automática</string>
     <string name="hint_server">Servidor (ex: http://10.0.2.2:8000)</string>
     <string name="hint_key">Chave API (AIza… / sk-… / sk-ant-…)</string>
