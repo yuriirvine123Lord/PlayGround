@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gerador de Vídeo — Veo FastAPI Generator</title>
+<meta name="description" content="Descubra modelos, crie roteiros e gere vídeos Veo a partir de um prompt.">
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#e8ecf7}
+header{border-bottom:1px solid #283454;background:#0d1428;position:sticky;top:0;z-index:10}
+.wrap{max-width:1020px;margin:0 auto;padding:0 18px}
+.bar{display:flex;align-items:center;gap:12px;padding:14px 0}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6d7cff,#b86bff);display:grid;place-items:center;font-weight:800}
+nav{margin-left:auto;display:flex;gap:14px;font-size:14px;color:#aeb8d4}
+nav a{color:#aeb8d4;text-decoration:none}
+main{max-width:1020px;margin:0 auto;padding:28px 18px 64px}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:start}
+@media(max-width:820px){.hero{grid-template-columns:1fr}}
+h1{margin:0 0 10px;font-size:clamp(28px,4vw,44px);line-height:1.05}
+p.lead{color:#aeb8d4;margin:0 0 18px;font-size:16px}
+.card{background:#141b31;border:1px solid #283454;border-radius:14px;padding:18px}
+label{display:block;margin:12px 0 6px;font-size:13px;color:#b6c2df}
+input,textarea,select{width:100%;border:1px solid #344365;background:#0d1428;color:#f5f7ff;border-radius:9px;padding:10px;font:inherit}
+textarea{min-height:120px;resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:9px;padding:10px 14px;background:#6d7cff;color:#fff;font-weight:700;cursor:pointer}
+button.secondary{background:#2d3a5c}
+button:disabled{opacity:.6;cursor:wait}
+pre{white-space:pre-wrap;word-break:break-word;background:#0a1020;border:1px solid #293654;border-radius:9px;padding:14px;min-height:70px;overflow:auto}
+.muted{font-size:12px;color:#8794b7}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.tile{background:#121931;border:1px solid #263252;border-radius:12px;padding:16px}
+.tile h3{margin:0 0 8px;font-size:16px}
+.tile p{margin:0;color:#9fabcc;font-size:14px}
+.preview{aspect-ratio:16/9;border-radius:12px;background:linear-gradient(135deg,#1a2447,#2b1a4d);border:1px solid #2e3a60;display:grid;place-items:center;overflow:hidden;position:relative}
+.preview .play{width:64px;height:64px;border-radius:50%;background:#6d7cff;display:grid;place-items:center;font-size:24px}
+.status{color:#aee7ba}
+footer{border-top:1px solid #283454;color:#8794b7;font-size:13px;padding:18px 0 40px}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+<div class="logo">V</div>
+<div><strong>Veo FastAPI Generator</strong><br><span class="muted">Gerador de vídeo • chat • descoberta de modelos</span></div>
+<nav><a href="#gerar">Gerar</a><a href="#modelos">Modelos</a><a href="#api">API</a></nav>
+</div></header>
+<main>
+<div class="hero">
+<div>
+<h1>Transforme um prompt em vídeo cinematográfico.</h1>
+<p class="lead">Descubra o catálogo ao vivo, crie o roteiro no chat e enfileire a geração Veo 3.1 com polling, download MP4 e status observável.</p>
+<div class="card" id="gerar">
+<label for="prompt">Prompt visual + áudio</label>
+<textarea id="prompt">Uma rua neon encharcada de chuva à noite, travelling lento para frente, reflexos realistas, trânsito distante e chuva suave, sem texto na tela.</textarea>
+<div class="row">
+<select id="modelo" aria-label="Modelo">
+<option value="veo-3.1-generate-preview" selected>veo-3.1-generate-preview</option>
+<option value="veo-3.0-generate-preview">veo-3.0-generate-preview</option>
+<option value="veo-2.0-generate-001">veo-2.0-generate-001</option>
+</select>
+<select id="proporcao" aria-label="Proporção">
+<option value="16:9" selected>16:9</option>
+<option value="9:16">9:16</option>
+</select>
+</div>
+<div class="row"><button id="gerarBtn">Gerar vídeo (demonstração)</button><button id="copiar" class="secondary">Copiar prompt</button></div>
+<pre id="saida" class="muted">Pronto para gerar. Esta página estática demonstra o fluxo — conecte sua GEMINI_API_KEY no backend FastAPI para geração real.</pre>
+</div>
+</div>
+<div>
+<div class="preview" aria-hidden="true"><div class="play">▶</div></div>
+<p class="muted">Pré-visualização 16:9 • 720p • 8s • áudio nativo Veo 3</p>
+<div class="card">
+<h2 style="margin:0 0 8px;font-size:16px">Roteiro rápido</h2>
+<p class="muted" style="margin-top:0">Ação, câmera e áudio em 8 segundos.</p>
+<pre id="roteiro">Plano: close-up → dolly lento.
+Luz: neon rosa/azul, reflexos molhados.
+Som: chuva + tráfego distante.</pre>
+<div class="row"><button id="roteiroBtn" class="secondary">Criar variação</button></div>
+</div>
+</div>
+</div>
+<div class="grid" id="modelos">
+<div class="tile"><h3>1. Descobrir modelos</h3><p>Consulta <code>/v1/discover</code> ao vivo e prioriza Veo 3.1 sem expor sua chave.</p></div>
+<div class="tile"><h3>2. Chat / roteiro</h3><p>Use <code>/v1/chat</code> com Google, OpenAI, Anthropic ou endpoint compatível.</p></div>
+<div class="tile"><h3>3. Vídeo Veo</h3><p>Enfileire em <code>/v1/videos</code>, acompanhe o job e baixe o MP4.</p></div>
+</div>
+<div class="card" id="api" style="margin-top:18px">
+<h2 style="margin:0 0 8px;font-size:16px">Endpoints</h2>
+<pre>GET  /health
+POST /v1/discover   {"api_key","provider":"auto"}
+POST /v1/chat       {"api_key","provider":"google","messages":[...]}
+POST /v1/videos     {"api_key","provider":"google","prompt":"..."}
+GET  /v1/videos/{job_id}
+GET  /v1/videos/{job_id}/download</pre>
+<p class="muted">Backend original: FastAPI + <code>predictLongRunning</code> do Gemini API. Esta prévia estática serve o <code>dist/index.html</code> na porta 3000.</p>
+<p class="status" id="health">● UI estática pronta — build dist/index.html servido com sucesso.</p>
+</div>
+</main>
+<footer><div class="wrap">Veo FastAPI Generator — demonstração estática para deploy e captura. Use HTTPS, autenticação própria e worker Redis em produção.</div></footer>
+<script>
+const $=id=>document.getElementById(id);
+$('copiar').onclick=async()=>{await navigator.clipboard.writeText($('prompt').value).catch(()=>{});$('copiar').textContent='Copiado';setTimeout(()=>$('copiar').textContent='Copiar prompt',1200)};
+$('gerarBtn').onclick=async()=>{const b=$('gerarBtn');b.disabled=true;const out=$('saida');const etapas=['Enfileirando job…','Status: queued → generating…','Consultando operação Veo…','Baixando MP4…'];for(const e of etapas){out.textContent=e;await new Promise(r=>setTimeout(r,600))}out.textContent='Demonstração concluída.\nModelo: '+$('modelo').value+'\nProporção: '+$('proporcao').value+'\nPara geração real, execute o backend FastAPI com GEMINI_API_KEY.';b.disabled=false};
+$('roteiroBtn').onclick=()=>{const v=['Travelling lateral em letreiros neon, poças espelhadas, sirene ao longe.','Plano sequência em beco chuvoso, câmera baixa, passos e trovão suave.','Drone lento sobre avenida molhada, faróis estourados, rádio distante.'];$('roteiro').textContent=v[Math.floor(Math.random()*v.length)]};
+</script>
+</body>
+</html>
