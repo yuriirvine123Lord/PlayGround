@@ -16,3 +16,15 @@
 - 👤 [Explore the creator's projects](https://omgithub.com/yuriirvine123Lord).
 - 🌍 [Create with OMGithub](https://omgithub.com).
 <!-- omgithub:readme:end -->
+
+## Netzack Videos (Android + IA)
+
+App **Netzack Videos** (`com.netzack.videos`): multi-IA com detecção automática
+(Google/Gemini/Veo, OpenAI, Anthropic, OpenAI-compatível), chat p/ roteiro e
+geração de vídeo estilo Veo 3 com 11 efeitos especiais.
+
+- App: `android/` — build: `cd android && ./gradlew :app:assembleDebug`
+- APK local: `android/app/build/outputs/apk/debug/app-debug.apk`
+- Download via GitHub: Actions → `Netzack Videos — Android APK` → Artifacts
+- Backend: `server/` — `uvicorn app:app --host 0.0.0.0 --port 8000`
+- Docs: `android/README.md`

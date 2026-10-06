@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B1020"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Netzack Videos"
+            android:textColor="#E8ECF7"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Multi-IA com detecção automática • Chat • Vídeo estilo Veo 3 + efeitos"
+            android:textColor="#AEB8D4"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="1. Conexão e chave"
+            android:textColor="#E8ECF7"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etServer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Servidor (ex: http://10.0.2.2:8000)"
+            android:text="http://10.0.2.2:8000"
+            android:textColor="#E8ECF7"
+            android:textColorHint="#8794B7"
+            android:inputType="textUri" />
+
+        <EditText
+            android:id="@+id/etKey"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Chave API (AIza… / sk-… / sk-ant-…)"
+            android:textColor="#E8ECF7"
+            android:textColorHint="#8794B7"
+            android:inputType="textPassword" />
+
+        <Spinner
+            android:id="@+id/spProvider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/tvDetected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Provedor detectado: —"
+            android:textColor="#AEE7BA"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/etBase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Base URL customizada (opcional)"
+            android:textColor="#E8ECF7"
+            android:textColorHint="#8794B7"
+            android:inputType="textUri" />
+
+        <Button
+            android:id="@+id/btnDiscover"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Descobrir modelos" />
+
+        <TextView
+            android:id="@+id/tvDiscover"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="O catálogo oficial aparece aqui. Sua chave nunca é exibida."
+            android:textColor="#AEB8D4"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="2. Chat / roteiro"
+            android:textColor="#E8ECF7"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etChat"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:gravity="top"
+            android:hint="Crie um roteiro cinematográfico de 8 segundos…"
+            android:textColor="#E8ECF7"
+            android:textColorHint="#8794B7"
+            android:inputType="textMultiLine" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnChat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Enviar" />
+
+            <Button
+                android:id="@+id/btnCopy"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Copiar" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvChat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="A resposta aparece aqui."
+            android:textColor="#E8ECF7"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="3. Vídeo + efeitos especiais"
+            android:textColor="#E8ECF7"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etVideo"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:gravity="top"
+            android:hint="Descreva a cena, câmera, ação e áudio…"
+            android:textColor="#E8ECF7"
+            android:textColorHint="#8794B7"
+            android:inputType="textMultiLine" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Efeito especial"
+            android:textColor="#AEB8D4"
+            android:textSize="12sp" />
+
+        <Spinner
+            android:id="@+id/spEffect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/spRatio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <Spinner
+                android:id="@+id/spResolution"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <Spinner
+                android:id="@+id/spDuration"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/cbAudio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Gerar áudio"
+                android:textColor="#E8ECF7" />
+
+            <Button
+                android:id="@+id/btnVideo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Gerar vídeo" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvVideo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="O job assíncrono aparece aqui."
+            android:textColor="#AEB8D4"
+            android:textSize="12sp" />
+
+        <VideoView
+            android:id="@+id/videoView"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btnPlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Reproduzir vídeo baixado" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Para produção use HTTPS, auth própria e nunca persista a chave em log. Jobs ficam na memória do servidor (1 instância)."
+            android:textColor="#8794B7"
+            android:textSize="11sp" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.NetzackVideos" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+</resources>

@@ -1,0 +1,10 @@
+[project]
+name = "netzack-videos"
+version = "1.0.0"
+description = "Netzack Videos — FastAPI multi-IA com chat e geração de vídeo estilo Veo 3"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra"
