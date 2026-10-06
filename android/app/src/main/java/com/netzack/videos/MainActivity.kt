@@ -16,14 +16,12 @@ import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import kotlin.concurrent.thread
 
-/** Netzack Videos V2: um chat só, um prompt só. Só a chave API — o app
- *  identifica sozinho o provedor (Google/OpenAI/Anthropic/compatível) e o modelo. */
+/** Netzack Videos V2: um chat só, um prompt só, SÓ a chave API.
+ *  Sem servidor, sem base URL — endpoints e modelos já vêm embarcados e o app
+ *  identifica sozinho o provedor (Google/OpenAI/Anthropic) e o modelo. */
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var etServer: EditText
-    private lateinit var tvHealth: TextView
     private lateinit var etKey: EditText
-    private lateinit var etBase: EditText
     private lateinit var tvDetected: TextView
     private lateinit var tvDiscover: TextView
     private lateinit var etPrompt: EditText
@@ -42,10 +40,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        etServer = findViewById(R.id.etServer)
-        tvHealth = findViewById(R.id.tvHealth)
         etKey = findViewById(R.id.etKey)
-        etBase = findViewById(R.id.etBase)
         tvDetected = findViewById(R.id.tvDetected)
         tvDiscover = findViewById(R.id.tvDiscover)
         etPrompt = findViewById(R.id.etPrompt)
@@ -64,10 +59,6 @@ class MainActivity : AppCompatActivity() {
         spDuration.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("4", "6", "8"))
         spDuration.setSelection(2)
 
-        val prefs = getSharedPreferences("netzack", Context.MODE_PRIVATE)
-        etServer.setText(prefs.getString("server", "http://10.0.2.2:8000"))
-
-        findViewById<Button>(R.id.btnHealth).setOnClickListener { doHealth() }
         findViewById<Button>(R.id.btnDiscover).setOnClickListener { doDiscover() }
         findViewById<Button>(R.id.btnChat).setOnClickListener { doChat() }
         findViewById<Button>(R.id.btnCopy).setOnClickListener { copyChat() }
@@ -75,47 +66,32 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnPlay).setOnClickListener { playLast() }
     }
 
-    private fun api(): NetzackApi {
-        val server = etServer.text.toString().ifBlank { "http://10.0.2.2:8000" }
-        getSharedPreferences("netzack", Context.MODE_PRIVATE).edit().putString("server", server).apply()
-        return NetzackApi(server)
-    }
-
-    private fun baseOrNull(): String? = etBase.text.toString().ifBlank { null }
-
     private fun toast(msg: String) = runOnUiThread {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
-    private fun doHealth() {
-        tvHealth.text = "Testando…"
-        thread {
-            try {
-                val raw = api().health()
-                runOnUiThread { tvHealth.text = "Servidor OK: $raw" }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    tvHealth.text = "Não alcancei o servidor: ${e.message}\n" +
-                        "No emulador use http://10.0.2.2:8000. No celular físico use http://SEU_IP:8000 com o backend rodando."
-                }
-            }
-        }
+    private fun keyOrAsk(): String? {
+        val k = etKey.text.toString().trim()
+        if (k.isBlank()) toast("Cole sua chave API primeiro — só ela basta")
+        return k.ifBlank { null }
     }
 
     private fun doDiscover() {
-        val key = etKey.text.toString()
-        if (key.isBlank()) {
-            tvDiscover.text = "Cole sua chave API primeiro — só ela basta."
-            return
-        }
+        val key = keyOrAsk() ?: return
         tvDiscover.text = "Identificando IA e modelo…"
         thread {
             try {
-                // provider sempre "auto" e model sempre null: detecção 100% automática
-                val res = api().discover(key, "auto", baseOrNull())
+                val provider = DirectAI.detect(key)
+                val models = DirectAI.listModels(provider, key)
+                val chatModel = DirectAI.pickChatModel(provider, models)
+                val videoModel = try {
+                    DirectAI.pickVideoModel(models)
+                } catch (e: Exception) {
+                    null
+                }
                 runOnUiThread {
-                    tvDetected.text = "IA detectada: ${res.provider} • modelo: ${res.selectedModel} (chave ${ProviderDetector.redact(key)})"
-                    tvDiscover.text = "Modelos: ${res.models.take(20).joinToString(", ")}\n\n${res.raw.take(2000)}"
+                    tvDetected.text = "IA: $provider • chat: $chatModel • vídeo: ${videoModel ?: "sem Veo liberado"} (chave ${DirectAI.redact(key)})"
+                    tvDiscover.text = "Modelos da sua conta: ${models.take(25).joinToString(", ")}"
                 }
             } catch (e: Exception) {
                 runOnUiThread { tvDiscover.text = "Erro: ${e.message}" }
@@ -124,13 +100,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun doChat() {
-        val msg = etPrompt.text.toString()
+        val key = keyOrAsk() ?: return
+        val msg = etPrompt.text.toString().trim()
         if (msg.isBlank()) { toast("Digite o prompt"); return }
-        if (etKey.text.toString().isBlank()) { toast("Cole sua chave API primeiro"); return }
         tvChat.text = "Gerando resposta…"
         thread {
             try {
-                val res = api().chat(etKey.text.toString(), "auto", baseOrNull(), msg)
+                val res = DirectAI.chat(DirectAI.detect(key), key, msg)
                 runOnUiThread { tvChat.text = "[${res.provider}/${res.model}]\n\n${res.text}" }
             } catch (e: Exception) {
                 runOnUiThread { tvChat.text = "Erro: ${e.message}" }
@@ -145,42 +121,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun doVideo() {
-        val basePrompt = etPrompt.text.toString()
+        val key = keyOrAsk() ?: return
+        val basePrompt = etPrompt.text.toString().trim()
         if (basePrompt.isBlank()) { toast("Digite o prompt"); return }
-        if (etKey.text.toString().isBlank()) { toast("Cole sua chave API primeiro"); return }
         val effect = Effects.ALL[spEffect.selectedItemPosition]
         val fullPrompt = (basePrompt + effect.promptSuffix).trim()
         val ratio = if (spRatio.selectedItemPosition == 0) "16:9" else "9:16"
         val resolution = listOf("720p", "1080p", "4k")[spResolution.selectedItemPosition]
         val duration = listOf(4, 6, 8)[spDuration.selectedItemPosition]
-        tvVideo.text = "Enfileirando… (efeito: ${effect.name})"
+        tvVideo.text = "Iniciando… (efeito: ${effect.name})"
         thread {
             try {
-                val a = api()
-                val key = etKey.text.toString()
-                val job = a.createVideo(key, "auto", baseOrNull(), fullPrompt, null, ratio, resolution, duration, cbAudio.isChecked, effect.negativePrompt)
-                runOnUiThread { tvVideo.text = "Job ${job.jobId}\nstatus=${job.status} modelo=${job.model}\nGerando (isso leva minutos no Veo)…" }
-                var status = job
+                val provider = DirectAI.detect(key)
+                if (provider != "google") {
+                    runOnUiThread { tvVideo.text = "Vídeo precisa de chave Google (AIza…) com Veo. Sua chave é de: $provider (serve para Conversar)." }
+                    return@thread
+                }
+                val (model, op) = DirectAI.startVideo(key, fullPrompt, ratio, resolution, duration, cbAudio.isChecked, effect.negativePrompt)
+                runOnUiThread { tvVideo.text = "Modelo $model gerando… (o Veo leva minutos, aguarde)" }
                 var tries = 0
-                while ((status.status == "queued" || status.status == "generating") && tries < 180) {
-                    Thread.sleep(5000)
+                while (tries < 90) {
+                    Thread.sleep(10000)
                     tries++
-                    status = a.pollJob(job.jobId)
-                    val s = status
-                    runOnUiThread { tvVideo.text = "Job ${s.jobId}\nstatus=${s.status}\nmodelo=${s.model}" }
-                }
-                if (status.status == "completed") {
-                    val dest = File(cacheDir, "${job.jobId}.mp4")
-                    a.downloadToFile(job.jobId, dest)
-                    lastVideoFile = dest
-                    runOnUiThread {
-                        tvVideo.text = "Pronto! Toque em Reproduzir."
-                        videoView.setVideoPath(dest.absolutePath)
-                        videoView.start()
+                    val poll = DirectAI.pollVideo(key, op)
+                    if (poll.done && poll.ref != null) {
+                        val dest = File(cacheDir, "netzack-${System.currentTimeMillis()}.mp4")
+                        DirectAI.downloadVideo(key, poll.ref, dest)
+                        lastVideoFile = dest
+                        runOnUiThread {
+                            tvVideo.text = "Pronto! Toque em Reproduzir."
+                            videoView.setVideoPath(dest.absolutePath)
+                            videoView.start()
+                        }
+                        return@thread
                     }
-                } else {
-                    runOnUiThread { tvVideo.text = "Não gerou. Motivo: ${status.error}\nSe for acesso ao Veo, use uma chave Google com Veo liberado." }
+                    val t = tries
+                    runOnUiThread { tvVideo.text = "Modelo $model gerando… (${t * 10}s, aguarde)" }
                 }
+                runOnUiThread { tvVideo.text = "Demorou demais — tente de novo com um prompt mais curto." }
             } catch (e: Exception) {
                 runOnUiThread { tvVideo.text = "Não gerou. Motivo: ${e.message}" }
             }

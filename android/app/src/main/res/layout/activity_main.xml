@@ -22,7 +22,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Só cole a chave API — o app identifica a IA e o modelo sozinho"
+            android:text="Só cole a chave API — sem servidor, sem configurar nada"
             android:textColor="#AEB8D4"
             android:textSize="13sp" />
 
@@ -30,40 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="1. Servidor"
-            android:textColor="#E8ECF7"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/etServer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Servidor (ex: http://10.0.2.2:8000)"
-            android:text="http://10.0.2.2:8000"
-            android:textColor="#E8ECF7"
-            android:textColorHint="#8794B7"
-            android:inputType="textUri" />
-
-        <Button
-            android:id="@+id/btnHealth"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Testar servidor" />
-
-        <TextView
-            android:id="@+id/tvHealth"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Toque para verificar se o app alcança o servidor."
-            android:textColor="#AEB8D4"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="2. Chave API (só isso!)"
+            android:text="1. Chave API (só isso!)"
             android:textColor="#E8ECF7"
             android:textSize="17sp"
             android:textStyle="bold" />
@@ -76,15 +43,6 @@
             android:textColor="#E8ECF7"
             android:textColorHint="#8794B7"
             android:inputType="textPassword" />
-
-        <EditText
-            android:id="@+id/etBase"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Endpoint próprio (opcional, só p/ IA personalizada)"
-            android:textColor="#E8ECF7"
-            android:textColorHint="#8794B7"
-            android:inputType="textUri" />
 
         <Button
             android:id="@+id/btnDiscover"
@@ -113,7 +71,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="3. Prompt único"
+            android:text="2. Prompt único"
             android:textColor="#E8ECF7"
             android:textSize="17sp"
             android:textStyle="bold" />
@@ -233,7 +191,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Dica: se o vídeo falhar, leia a mensagem de erro — ela diz se é chave sem acesso ao Veo, servidor fora do ar ouprompt inválido. Para produção use HTTPS e auth própria."
+            android:text="Dica: vídeo precisa de chave Google (AIza…) com Veo liberado. Chaves OpenAI/Anthropic servem para Conversar."
             android:textColor="#8794B7"
             android:textSize="11sp" />
     </LinearLayout>
