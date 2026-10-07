@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⚡ Netezack Vídeos V2 — App Android + Motor IA</title>
+<style>
+:root{color-scheme:dark;--bg:#04060b;--panel:#070b14;--line:#12203f;--neon:#00f5d4;--mag:#ff2e88;--txt:#dfe7f5;--mut:#7d8db0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:32px 18px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px}
+h1{margin:0;font-size:30px;letter-spacing:1px}
+h1 em{font-style:normal;color:var(--neon)}
+.sub{color:var(--mut);margin:6px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:18px}
+h2{margin:0 0 10px;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--neon)}
+p{margin:8px 0}
+ul{margin:8px 0;padding-left:20px}
+li{margin:4px 0}
+code{background:#04070e;border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:13px}
+.btn{display:inline-block;margin-top:12px;border:1px solid var(--neon);color:var(--neon);border-radius:8px;padding:11px 22px;font-weight:700;text-decoration:none}
+.btn:hover{background:#00f5d414}
+.btn small{display:block;font-weight:400;font-size:12px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}h1{font-size:23px}}
+.badge{display:inline-block;font-size:12px;padding:3px 12px;border:1px solid var(--neon);border-radius:99px;color:var(--neon);margin:2px 4px 2px 0}
+.badge.mag{border-color:var(--mag);color:var(--mag)}
+footer{color:var(--mut);font-size:12px;margin-top:22px;text-align:center}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{border:1px solid var(--line);padding:7px 10px;text-align:left}
+th{color:var(--neon)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>⚡ NETEZACK <em>VÍDEOS V2</em></h1>
+<p class="sub">App Android nativo (Kotlin + Jetpack Compose) com chat de IA e gerador de vídeo 2–3 min em menos de 5 min. Motor Python intacto no servidor.</p>
+<div><span class="badge">200 OK</span><span class="badge">18 testes verdes</span><span class="badge mag">APK 17 MB</span></div>
+</header>
+
+<div class="card">
+<h2>// baixar o app</h2>
+<p>Instalação direta, sem ZIP. Android 8.0+ (API 26).</p>
+<a class="btn" href="https://github.com/yuriirvine123Lord/PlayGround/releases/download/netezack-android-v1.0/app-debug.apk">⬇ BAIXAR app-debug.apk<small>release netezack-android-v1.0 · application/vnd.android.package-archive</small></a>
+<p style="color:var(--mut);font-size:13px">No app: informe a Base URL do servidor, toque em TESTAR (esperado 200 OK) e gere vídeos. Sem chave, o chat usa a IA embutida gratuita.</p>
+</div>
+
+<div class="card">
+<h2>// o que foi validado</h2>
+<table>
+<tr><th>Função</th><th>Resultado</th></tr>
+<tr><td><code>GET /health</code></td><td>200 OK</td></tr>
+<tr><td><code>GET /v1/effects</code> (40 efeitos)</td><td>200 OK</td></tr>
+<tr><td><code>POST /v1/chat</code> (IA)</td><td>200 OK</td></tr>
+<tr><td><code>POST /v1/discover</code></td><td>200 OK</td></tr>
+<tr><td>Vídeo 2 min (1200 quadros)</td><td>✔ ~51s · MP4 h264 + preview ao vivo</td></tr>
+<tr><td>Vídeo 2,5 min (1500 quadros)</td><td>✔ ~69s · MP4 h264 + preview ao vivo</td></tr>
+<tr><td>Vídeo 3 min vertical (1800 quadros)</td><td>✔ ~66s · MP4 h264 + preview ao vivo</td></tr>
+</table>
+<p style="color:var(--mut);font-size:13px">Três rodadas end-to-end (saúde, efeitos, chat, descoberta e 3 vídeos em paralelo por rodada). Os três vídeos de cada rodada concluíram juntos em ~69s.</p>
+</div>
+
+<div class="grid">
+<div class="card">
+<h2>// telas do app</h2>
+<ul>
+<li><b>Chat IA</b> — converse, copie a resposta e envie ao gerador.</li>
+<li><b>Gerar vídeo</b> — durações 8s a 3 min (padrão 150s), 16:9/9:16, até 5 efeitos, progresso real e preview ao vivo.</li>
+<li><b>Player local</b> — reprodução e download do MP4 no aparelho.</li>
+</ul>
+</div>
+<div class="card">
+<h2>// motor (servidor)</h2>
+<ul>
+<li>Veo remoto (≤8s) ou render local com efeitos para 2–3 min.</li>
+<li>Suporte a fal.ai (<code>fal_…</code>) e chat gratuito sem chave.</li>
+<li>Chaves reais só em variável de ambiente — nunca no repo.</li>
+</ul>
+</div>
+</div>
+
+<div class="card">
+<h2>// código</h2>
+<p>Cliente Android em <code>android-app/</code> · motor em <code>netezack-videos-v2/</code> (render de vídeo intocado).</p>
+<p><a style="color:var(--neon)" href="https://github.com/yuriirvine123Lord/PlayGround">github.com/yuriirvine123Lord/PlayGround</a></p>
+</div>
+
+<footer>⚡ NETEZACK VÍDEOS V2 · preview estático de validação · Produzida por Yuri Lord &amp; Agente Falcão ⚡</footer>
+</div>
+</body>
+</html>

@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun App() {
-    var baseUrl by remember { mutableStateOf("https://netezack-videos-v2-production.up.railway.app") }
+    var baseUrl by remember { mutableStateOf("") }
     var apiKey by remember { mutableStateOf("") }
     var showKey by remember { mutableStateOf(false) }
     var healthMsg by remember { mutableStateOf("status: aguardando teste") }
@@ -86,12 +86,13 @@ fun App() {
     val scope = rememberCoroutineScope()
 
     Column(Modifier.fillMaxSize().padding(12.dp)) {
-        Text("⚡ NETEZACK VÍDEOS V2", color = Neon, fontSize = 18.sp, fontFamily = FontFamily.Monospace)
-        Text("cliente nativo Kotlin · motor Python intacto no servidor", color = Color.Gray, fontSize = 11.sp)
+        Text("⚡ LONGVIDEOV2", color = Neon, fontSize = 18.sp, fontFamily = FontFamily.Monospace)
+        Text("app nativo Kotlin · IA do projeto LongvideoV2 · digite a URL do seu servidor", color = Color.Gray, fontSize = 11.sp)
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
             value = baseUrl, onValueChange = { baseUrl = it },
-            label = { Text("Base URL do servidor") }, modifier = Modifier.fillMaxWidth(), singleLine = true
+            label = { Text("URL do servidor LongvideoV2") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+            placeholder = { Text("https://seu-servidor") }
         )
         OutlinedTextField(
             value = apiKey, onValueChange = { apiKey = it },
