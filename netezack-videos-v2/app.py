@@ -213,6 +213,12 @@ async def _credentials(credentials: Credentials) -> tuple[str, str, Any]:
     raw_key = credentials.api_key.get_secret_value() if credentials.api_key else None
     key = (raw_key or _env_key(credentials.provider))
     if not key:
+        # IA embutida: sem chave o app usa o provedor gratuito para chat/roteiro.
+        # O vídeo continua saindo pelo render local do motor (intacto).
+        if credentials.provider in ("auto", "pollinations"):
+            return "", "pollinations", build_provider(
+                "pollinations", "", hidden_base_for("pollinations")
+            )
         raise HTTPException(
             status_code=422,
             detail="Cole sua API key no campo de chave. O sistema identifica o provedor sozinho.",
@@ -278,6 +284,34 @@ async def discover(request: DiscoverRequest) -> dict[str, Any]:
         return _public_discovery(result, selected, key)
     except ProviderError as exc:
         raise _provider_error(exc) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502, detail=f"Erro interno controlado: {exc.__class__.__name__}"
+        ) from exc
+
+
+def _offline_chat_answer(user_text: str) -> dict[str, Any]:
+    """Resposta útil da IA embutida quando o provedor gratuito está fora."""
+    from effects import parse_effects_from_prompt
+    fx = parse_effects_from_prompt(user_text, None)
+    idea = " ".join((user_text or "").split())[:220]
+    return {
+        "text": (
+            "⚡ NETEZACK V2 · resposta local (modo offline) ⚡\n"
+            "Não consegui falar com o provedor de IA agora (sem chave válida). "
+            "Mesmo assim, transformei sua ideia em roteiro de vídeo pronto:\n\n"
+            f"→ \"{idea}\"\n"
+            f"→ efeitos detectados: {', '.join(fx[:5]) or 'nenhum (IA escolhe)'}\n\n"
+            "Para conversar com a IA completa e expandir roteiros, cole uma API key "
+            "no campo de chave (Google/Gemini, OpenAI, Anthropic, Groq, Replicate, "
+            "fal.ai…). O vídeo 2-3 min continua sendo gerado <5min no motor local, "
+            "sem precisar de chave."
+        ),
+        "model": "offline-local",
+        "offline": True,
+        "provider": "pollinations",
+        "key_hint": "********",
+    }
 
 
 @app.post("/v1/chat")
@@ -298,7 +332,16 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
             "key_hint": redact_key(key),
         }
     except ProviderError as exc:
+        if provider_name == "pollinations":
+            user_text = next(
+                (m["content"] for m in messages if m.get("role") == "user"), ""
+            )
+            return _offline_chat_answer(user_text)
         raise _provider_error(exc) from exc
+    except Exception as exc:  # nunca devolver 500: erro limpo e observável
+        raise HTTPException(
+            status_code=502, detail=f"Erro interno controlado: {exc.__class__.__name__}"
+        ) from exc
 
 
 async def _expand_prompt_inner(provider: Any, provider_name: str, prompt: str, duration_s: int) -> str:

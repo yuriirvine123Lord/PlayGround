@@ -13,7 +13,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
-from urllib.parse import urljoin
+from urllib.parse import quote, urljoin
 
 import httpx
 
@@ -44,8 +44,14 @@ _HIDDEN_BASES: dict[str, dict[str, Any]] = {
     "huggingface": {"base": "https://router.huggingface.co/v1", "kind": "openai", "video": False, "free": True},
     "replicate": {"base": "https://api.replicate.com/v1", "kind": "openai", "video": False, "free": False},
     "stability": {"base": "https://api.stability.ai/v2beta", "kind": "openai", "video": False, "free": False},
-    # Gratuitas sem chave (usadas como fallback de chat/roteiro, nunca expostas)
-    "pollinations": {"base": "https://text.pollinations.ai/openai", "kind": "openai", "video": False, "free": True},
+    # fal.ai (chave fal_…): roteamento via registry; vídeo 2-3min sai pelo
+    # fallback local garantido (<5min). A chave real fica só em FAL_API_KEY
+    # (env/Railway) ou no campo de chave do app — nunca hardcoded no repo.
+    "fal": {"base": "https://queue.fal.run/fal-ai", "kind": "openai", "video": True, "free": False},
+    # Gratuita sem chave (fallback de chat/roteiro embutido, nunca exposta).
+    # Usa o endpoint de texto por GET, que responde 200 anonimamente; o POST
+    # /openai legado passou a exigir créditos (402) para usuários autenticados.
+    "pollinations": {"base": "https://text.pollinations.ai", "kind": "pollinations", "video": False, "free": True},
 }
 
 # Dicas de formato de chave mostradas ao usuário (sem revelar URLs).
@@ -53,7 +59,8 @@ KEY_FORMAT_HINTS = (
     "Google/Gemini (começa com AIza…), "
     "OpenAI (sk-…), Anthropic (sk-ant-…), "
     "Groq (gsk_…), HuggingFace (hf_…), Replicate (r8_…), "
-    "xAI (xai-…), ou selecione o provedor manualmente."
+    "xAI (xai-…), ou selecione o provedor manualmente. "
+    "fal.ai (fal_…) também é aceita: vídeo 2-3min via fallback local."
 )
 
 VIDEO_MODEL_PRIORITY = (
@@ -170,6 +177,8 @@ def infer_provider(api_key: str, provider: str = "auto", base_url: str | None = 
         return "replicate"
     if key.startswith("xai-"):
         return "xai"
+    if key.startswith("fal_"):
+        return "fal"
 
     raise ProviderError(
         "Não foi possível identificar esta chave com segurança. Informe provider e base_url; "
@@ -307,6 +316,28 @@ async def _request_json(
     if not isinstance(data, dict):
         raise ProviderError("O provedor retornou um JSON inesperado.")
     return data
+
+
+async def _request_text(
+    method: str,
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    timeout: float = 60.0,
+    follow_redirects: bool = True,
+) -> str:
+    try:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=follow_redirects) as client:
+            response = await client.request(method, url, headers=headers)
+    except httpx.RequestError as exc:
+        raise ProviderError(f"Falha de rede ao acessar o provedor: {exc.__class__.__name__}") from exc
+
+    if response.status_code >= 400:
+        raise ProviderError(
+            friendly_http_message(response.status_code, _safe_error_text(response)),
+            response.status_code,
+        )
+    return response.text
 
 
 def _model_ids(data: dict[str, Any]) -> list[str]:
@@ -706,6 +737,60 @@ class AnthropicProvider:
         return {"text": text, "model": data.get("model", model), "usage": data.get("usage"), "raw": data}
 
 
+POLLINATIONS_BASE_URL = "https://text.pollinations.ai"
+
+
+class PollinationsProvider:
+    """Chat gratuito e sem chave (IA embutida) usando o endpoint de texto por GET.
+
+    É o fallback de chat/roteiro do projeto: ao colar nenhuma chave, o app usa
+    este provedor para conversar e para roteirizar o vídeo. Não expõe URL ao
+    cliente e não afeta o motor de vídeo (que tem render local próprio).
+    """
+
+    name = "pollinations"
+
+    def __init__(self, api_key: str = "", base_url: str | None = None):
+        self.api_key = api_key or ""
+        self.base_url = (base_url or POLLINATIONS_BASE_URL).rstrip("/")
+
+    async def discover(self) -> DiscoveryResult:
+        return DiscoveryResult(
+            provider=self.name,
+            models=["openai"],
+            selected_model="openai",
+            capabilities={"chat": True, "video": False, "free": True, "automatic_selection": True},
+        )
+
+    async def chat(self, model: str, messages: list[dict[str, str]], temperature: float) -> dict[str, Any]:
+        system = "\n".join(m.get("content", "") for m in messages if m.get("role") == "system")
+        convo = "\n".join(
+            f"{m.get('role', 'user')}: {m.get('content', '')}"
+            for m in messages
+            if m.get("role") != "system"
+        )
+        prompt = (f"{system}\n\n{convo}" if system else convo).strip() or "Olá"
+        encoded = quote(prompt[:600], safe="")
+        headers = {"User-Agent": "NetezackVideos/2.1", "Accept": "text/plain"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        text = ""
+        last: Exception | None = None
+        for attempt in range(2):  # upstream gratuito é flaky: uma tentativa extra
+            try:
+                text = (await _request_text(
+                    "GET", f"{self.base_url}/{encoded}?referrer=netezack",
+                    headers=headers, timeout=60,
+                )).strip()
+            except Exception as exc:  # noqa: BLE001 — retry e cai no offline se insistir
+                last = exc
+            if text:
+                break
+        if not text:
+            raise ProviderError("O provedor gratuito não respondeu agora.", 502) from last
+        return {"text": text, "model": model or "openai"}
+
+
 def build_provider(provider: str, api_key: str, base_url: str | None = None) -> Any:
     # Resolve a base oficial no servidor quando o usuário não informou nada.
     effective_base = base_url or hidden_base_for(provider)
@@ -715,6 +800,8 @@ def build_provider(provider: str, api_key: str, base_url: str | None = None) -> 
         return AnthropicProvider(api_key, effective_base)
     if provider == "openai":
         return OpenAICompatibleProvider(api_key, effective_base or OPENAI_BASE_URL)
+    if provider == "pollinations":
+        return PollinationsProvider(api_key, effective_base)
     if provider == "openai_compatible":
         if not effective_base:
             raise ProviderError("base_url é obrigatório para openai_compatible.", 422)
@@ -726,5 +813,7 @@ def build_provider(provider: str, api_key: str, base_url: str | None = None) -> 
             return GoogleProvider(api_key, effective_base)
         if entry["kind"] == "anthropic":
             return AnthropicProvider(api_key, effective_base)
+        if entry["kind"] == "pollinations":
+            return PollinationsProvider(api_key, effective_base)
         return OpenAICompatibleProvider(api_key, effective_base or OPENAI_BASE_URL)
     raise ProviderError(f"Provedor não suportado: {provider}", 422)

@@ -230,3 +230,46 @@ def test_ui_offers_10_minutes(client):
     ui = client.get("/")
     assert 'value="600"' in ui.text
     assert "10 min" in ui.text
+
+
+def test_keyless_uses_free_embedded_provider():
+    import asyncio
+    from app import Credentials, _credentials
+
+    async def go():
+        key, provider_name, provider = await _credentials(Credentials())
+        return key, provider_name, provider.name
+
+    key, name, prov = asyncio.run(go())
+    assert key == ""
+    assert name == "pollinations"
+    assert prov == "pollinations"
+
+
+def test_chat_without_key_returns_200_offline_fallback(monkeypatch, client):
+    import providers as providers_module
+
+    async def boom(self, model, messages, temperature):
+        raise providers_module.ProviderError("provedor gratuito fora do ar", 502)
+
+    async def keyless(credentials):
+        return ("", "pollinations", providers_module.build_provider(
+            "pollinations", "", providers_module.hidden_base_for("pollinations")
+        ))
+
+    monkeypatch.setattr(providers_module.PollinationsProvider, "chat", boom)
+    monkeypatch.setattr(app_module, "_credentials", keyless)
+
+    response = client.post(
+        "/v1/chat",
+        json={"messages": [{"role": "user", "content": "cena de rua neon"}]},
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["offline"] is True
+    assert "modo offline" in body["text"].lower()
+
+
+def test_fal_key_prefix_detected():
+    assert infer_provider("fal_" + "a" * 30) == "fal"
+    assert infer_provider("fal_sk_test:secret") == "fal"

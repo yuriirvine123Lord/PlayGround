@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.NetezackLongVideo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#04060b</item>
+        <item name="android:statusBarColor">#04060b</item>
+        <item name="android:navigationBarColor">#04060b</item>
+    </style>
+</resources>
