@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#04060b">
+<title>Netezack Vídeos V2 — Da ideia ao vídeo com IA</title>
+<meta name="description" content="Netezack Vídeos V2 transforma um prompt em vídeo com IA: roteiro automático, 40 efeitos especiais e preview real quadro a quadro. Detecta o provedor pela chave.">
+<meta property="og:title" content="Netezack Vídeos V2 — Da ideia ao vídeo com IA">
+<meta property="og:description" content="Prompt no chat, IA roteiriza e gera. 40 efeitos, preview real e fallback local garantido.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Pular para o conteúdo</a>
+
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="Netezack Vídeos V2 — início">
+      <span class="mark" aria-hidden="true">N</span>
+      <span class="brandtext">Netezack <b>Vídeos V2</b></span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Navegação principal">
+      <a href="#recursos">Recursos</a>
+      <a href="#efeitos">Efeitos</a>
+      <a href="#estudio">Estúdio</a>
+      <a href="#provedores">Provedores</a>
+      <a href="#faq">FAQ</a>
+      <a class="nav-cta" href="#estudio">Criar vídeo</a>
+    </nav>
+    <button class="menu" id="menuBtn" aria-expanded="false" aria-controls="nav" aria-label="Abrir menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top">
+    <canvas class="hero-cv" id="heroCanvas" aria-hidden="true"></canvas>
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="wrap hero-inner">
+      <p class="eyebrow"><span class="dot"></span> IA de vídeo · 40 efeitos · preview real</p>
+      <h1>Digite a ideia.<br><em>A IA</em> dirige o vídeo.</h1>
+      <p class="lead">
+        O Netezack Vídeos V2 transforma um prompt em vídeo com roteiro automático,
+        efeitos escolhidos sozinho e <strong>preview real quadro a quadro</strong> durante a renderização.
+        Cole a chave, o servidor identifica o provedor.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="#estudio">Começar agora</a>
+        <a class="btn ghost" href="#recursos">Ver recursos</a>
+      </div>
+      <ul class="stats">
+        <li><b>40</b><span>efeitos especiais</span></li>
+        <li><b>12+</b><span>provedores de IA</span></li>
+        <li><b>100%</b><span>fallback local</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="strip" aria-label="Destaques">
+    <div class="wrap strip-inner">
+      <span>PROMPT → ROTEIRO → VÍDEO</span>
+      <span aria-hidden="true">◆</span>
+      <span>URLs DE API ESCONDIDAS NO SERVIDOR</span>
+      <span aria-hidden="true">◆</span>
+      <span>PREVIEW FRAME A FRAME</span>
+    </div>
+  </section>
+
+  <section class="wrap section" id="recursos">
+    <header class="sec-head">
+      <p class="kicker">// recursos</p>
+      <h2>Tudo que um estúdio de IA precisa</h2>
+      <p class="sec-sub">Do prompt ao MP4 final, sem sair do navegador e sem complicar a infraestrutura.</p>
+    </header>
+    <div class="cards">
+      <article class="card">
+        <span class="ico" aria-hidden="true">✦</span>
+        <h3>Prompt-driven</h3>
+        <p>Você escreve, a IA roteiriza. O chat expande a ideia e transforma em um plano de cena pronto para renderizar.</p>
+      </article>
+      <article class="card">
+        <span class="ico" aria-hidden="true">≡</span>
+        <h3>40 efeitos especiais</h3>
+        <p>De grade neon a VHS, glitch, chuva e Matrix rain. A detecção automática lê o prompt e escolhe os efeitos certos.</p>
+      </article>
+      <article class="card">
+        <span class="ico" aria-hidden="true">◐</span>
+        <h3>Preview real</h3>
+        <p>Acompanhe quadros renderizados ao vivo com barra de progresso e contagem de frames. Nada de simulação.</p>
+      </article>
+      <article class="card">
+        <span class="ico" aria-hidden="true">⌘</span>
+        <h3>Auto-detect de API</h3>
+        <p>Cole a chave e pronto. Google/Gemini, OpenAI, Anthropic, Groq, DeepSeek, xAI, Mistral, OpenRouter e mais.</p>
+      </article>
+      <article class="card">
+        <span class="ico" aria-hidden="true">⛨</span>
+        <h3>Fallback garantido</h3>
+        <p>Sem billing ou sem Veo? O app gera o MP4 local com os efeitos. O resultado nunca é uma tela de erro.</p>
+      </article>
+      <article class="card">
+        <span class="ico" aria-hidden="true">⇄</span>
+        <h3>Segredos no servidor</h3>
+        <p>As base URLs ficam escondidas no backend. O cliente nunca vê endpoints internos nem credenciais.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="wrap section" id="como">
+    <header class="sec-head">
+      <p class="kicker">// como funciona</p>
+      <h2>Três passos até o vídeo</h2>
+    </header>
+    <ol class="steps">
+      <li>
+        <span class="n">1</span>
+        <h3>Cole a chave</h3>
+        <p>O servidor identifica o provedor e o modelo sozinho, sem você configurar base URL.</p>
+      </li>
+      <li>
+        <span class="n">2</span>
+        <h3>Descreva a cena</h3>
+        <p>Use o chat para gerar o roteiro e mande direto para o gerador de vídeo com um clique.</p>
+      </li>
+      <li>
+        <span class="n">3</span>
+        <h3>Renderize e baixe</h3>
+        <p>Acompanhe o preview ao vivo, escolha formato e duração e baixe o MP4 pronto.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="wrap section" id="efeitos">
+    <header class="sec-head">
+      <p class="kicker">// catálogo</p>
+      <h2>40 efeitos para dirigir a estética</h2>
+      <p class="sec-sub">Toque para montar uma combinação (até 5). A IA usa isso como direção de arte.</p>
+    </header>
+    <div class="fx-panel">
+      <div class="fx-toolbar">
+        <span class="chip-count"><b id="fxCount">0</b>/5 selecionados</span>
+        <button class="btn mini ghost" id="fxClear" type="button">Limpar</button>
+      </div>
+      <div class="fx-grid" id="fxGrid" role="group" aria-label="Efeitos especiais"></div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="estudio">
+    <header class="sec-head">
+      <p class="kicker">// estúdio</p>
+      <h2>Experimente o fluxo agora</h2>
+      <p class="sec-sub">Demonstração interativa no navegador — a mesma experiência do app, sem instalar nada.</p>
+    </header>
+    <div class="studio">
+      <form class="panel" id="studioForm" autocomplete="off">
+        <label for="prompt">Prompt do vídeo</label>
+        <textarea id="prompt" rows="3" placeholder="rua neon chuvosa à noite, dolly lento, glitch + chuva, sem texto…">rua neon chuvosa à noite, dolly lento, glitch + chuva, sem texto</textarea>
+        <div class="controls">
+          <div class="field">
+            <label for="aspect">Formato</label>
+            <select id="aspect"><option value="16:9">16:9</option><option value="9:16">9:16</option></select>
+          </div>
+          <div class="field">
+            <label for="res">Resolução</label>
+            <select id="res"><option>720p</option><option>1080p</option></select>
+          </div>
+          <div class="field">
+            <label for="dur">Duração</label>
+            <select id="dur"><option>8s</option><option>15s</option><option>30s</option><option>60s</option></select>
+          </div>
+        </div>
+        <div class="studio-actions">
+          <button class="btn primary" id="run" type="submit">Gerar vídeo</button>
+          <span class="stage" id="stage" role="status" aria-live="polite">pronto para renderizar</span>
+        </div>
+        <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+        <p class="frames" id="frames">quadros: 0/0</p>
+      </form>
+      <figure class="panel viewport">
+        <div class="vp-frame" data-aspect="16:9">
+          <canvas id="preview" width="1280" height="720" aria-label="Prévia da renderização"></canvas>
+          <span class="vp-tag">RENDER AO VIVO</span>
+        </div>
+        <figcaption id="vpCaption">Preview da cena — efeitos aplicados em tempo real</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="wrap section" id="provedores">
+    <header class="sec-head">
+      <p class="kicker">// integrações</p>
+      <h2>Uma chave, qualquer provedor</h2>
+      <p class="sec-sub">O backend detecta o formato da chave e monta a chamada certa — você só cola.</p>
+    </header>
+    <ul class="providers">
+      <li>Google / Gemini / Veo</li>
+      <li>OpenAI</li>
+      <li>Anthropic</li>
+      <li>Groq</li>
+      <li>DeepSeek</li>
+      <li>Together</li>
+      <li>HuggingFace</li>
+      <li>Replicate</li>
+      <li>xAI</li>
+      <li>Mistral</li>
+      <li>OpenRouter</li>
+      <li>OpenAI compatível</li>
+    </ul>
+  </section>
+
+  <section class="wrap section" id="faq">
+    <header class="sec-head">
+      <p class="kicker">// dúvidas</p>
+      <h2>Perguntas frequentes</h2>
+    </header>
+    <div class="faq" id="faqList">
+      <details>
+        <summary>Preciso de chave de API para testar?</summary>
+        <p>Você pode explorar o fluxo e o catálogo de efeitos sem chave. Para gerar o vídeo final, cole qualquer chave suportada — o servidor identifica o provedor automaticamente.</p>
+      </details>
+      <details>
+        <summary>O que acontece se o provedor falhar?</summary>
+        <p>O app cai no modo local e renderiza um MP4 com os efeitos escolhidos. Assim a entrega nunca fica vazia por causa de billing ou instabilidade externa.</p>
+      </details>
+      <details>
+        <summary>Minhas credenciais ficam expostas?</summary>
+        <p>Não. As URLs base e as chaves são usadas apenas no servidor, com redação nas respostas. O cliente nunca recebe endpoints internos.</p>
+      </details>
+      <details>
+        <summary>Quais formatos e durações são suportados?</summary>
+        <p>16:9 e 9:16, em 720p ou 1080p, com durações de 8 segundos a vídeos longos no modo IA, sempre acompanhando o progresso quadro a quadro.</p>
+      </details>
+      <details>
+        <summary>Funciona no celular?</summary>
+        <p>Sim. A interface é responsiva e o preview se adapta ao formato escolhido, incluindo vertical para redes sociais.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="wrap section final">
+    <div class="cta-box">
+      <h2>Pronto para dirigir sua próxima cena?</h2>
+      <p>Abra o estúdio, descreva a ideia e deixe a IA cuidar do resto.</p>
+      <a class="btn primary" href="#estudio">Criar meu vídeo</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot">
+    <div class="foot-brand">
+      <span class="mark" aria-hidden="true">N</span>
+      <span>Netezack Vídeos V2</span>
+    </div>
+    <p class="credits">Produzida Por Yuri Lord &amp;&amp; Agente Falcão ⚡</p>
+    <p class="fine">Projeto open source · preview real · URLs de API só no servidor</p>
+  </div>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>

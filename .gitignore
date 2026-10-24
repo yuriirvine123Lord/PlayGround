@@ -1,6 +1,8 @@
 
 screenshots/
 
+dist/
+
 *.log
 
 *.pid
